@@ -35,7 +35,7 @@ struct SwiftPlayground {
 
 
         // task: analyzing setudent scorews
-        let scores = [45, 78, 89, 32, 50, 92, 67, 41, 99, 56]
+        let scores:[Int] = [45, 78, 89, 32, 50, 92, 67, 41, 99, 56]
 
         let finalScores = scores.map { score in
         // Adds 5 to every score
