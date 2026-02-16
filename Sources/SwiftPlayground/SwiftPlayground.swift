@@ -38,7 +38,7 @@ struct SwiftPlayground {
         let scores:[Int] = [45, 78, 89, 32, 50, 92, 67, 41, 99, 56]
 
         let finalScores = scores.map { score in
-        // Adds 5 to every score
+        // Adds 5 to every score 
         return score + 5
         }
         .filter {score in
