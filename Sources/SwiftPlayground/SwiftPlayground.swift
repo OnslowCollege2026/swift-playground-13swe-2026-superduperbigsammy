@@ -21,10 +21,10 @@ func bookSummary(title: String, author: String, pages: Int) -> String {
     //t2:
     struct Temperature {
         static func toFahrenheit(celsius: Double) -> Double {
-            return (celsius*1.8) + 32
+            return (celsius * 1.8) + 32
         }
         static func toCelsius(fahrenheit: Double) -> Double {
-            return (fahrenheit - 32)/1.8
+            return (fahrenheit - 32) / 1.8
         }
     }
 
@@ -49,13 +49,36 @@ func bookSummary(title: String, author: String, pages: Int) -> String {
             print("isRunning =", isRunning)
             print("seconds =", seconds)
         }
-        
+
         //t4
         struct Cart {
-            var itemsCount: Int
+            var itemsCount: Int = 0
 
+            static let freeShippingThreshold: Int = 5
+
+            // lets player know
+            mutating func addItem() {
+                itemsCount += 1
+            }
+
+            //
+            static func qualifiesForFreeShipping(count: Int) -> Bool {
+                if count >= freeShippingThreshold {
+                    return true
+                } else {
+                    return false
+                }
+            }
+            //
+            func shippingMessage() -> String {
+                if Cart.qualifiesForFreeShipping(count: itemsCount) {
+                    return "free shipping"
+                } else {
+                    return "no free shipping bruh"
+                }
+            }
         }
-
+        //
     }
 
     @main
@@ -73,9 +96,9 @@ func bookSummary(title: String, author: String, pages: Int) -> String {
             print(book2Method.summary())
 
             //Task 2:
-            print(Temperature.toFahrenheit(celsius:22))
-            print(Temperature.toCelsius(fahrenheit:11))
-            print(Temperature.toFahrenheit(celsius:67))
+            print(Temperature.toFahrenheit(celsius: 22))
+            print(Temperature.toCelsius(fahrenheit: 11))
+            print(Temperature.toFahrenheit(celsius: 67))
 
             // Statics are better than instances as you dont need to create a new instance for something simple like this.
 
@@ -86,7 +109,7 @@ func bookSummary(title: String, author: String, pages: Int) -> String {
             timer.reset()
 
             // Task 4
-    
+            let cart1 = Cart()
         }
 
     }
