@@ -3,14 +3,14 @@
 import Foundation
 
 struct Student: Identifiable, Codable {
-    let id: Int
+    var id: Int
     var name: String
     var age: Int
 }
-struct Course: CustomStringConvertible, Codable {
-    let id = Int()
-    let title = String()
-    let courseDescription: String
+struct Course: CustomStringConvertible {
+    let id: Int()
+    let title: String()
+    let courseDescription: String()
 
     var description: String { "Course \(title) (\(id)):\n\(courseDescription)"}
 }
