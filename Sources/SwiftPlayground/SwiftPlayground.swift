@@ -8,9 +8,9 @@ struct Student: Identifiable, Codable {
     var age: Int
 }
 struct Course: CustomStringConvertible {
-    let id: Int()
-    let title: String()
-    let courseDescription: String()
+    let id: Int
+    let title: String
+    let courseDescription: String
 
     var description: String { "Course \(title) (\(id)):\n\(courseDescription)"}
 }
