@@ -29,7 +29,7 @@ let enrolledStudent = Enrolment(studentId: 12, courseId: 16)
 print(enrolledStudent)
 let encodedStudent = try! JSONEncoder().encode(enrolledStudent)
 print(encodedStudent)
-let decodedStudent = try! JSONDecoder().decode(Student.self, from: encodedStudent)
-print(decodedStudent)
+//let decodedStudent = try! JSONDecoder().decode(Student.self, from: encodedStudent)
+//print(decodedStudent)
     }
 }
