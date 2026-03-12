@@ -97,9 +97,7 @@ struct SwiftPlayground {
             })
 
             let windowSitter = try Purchaser.filter(
-                key: [
-                    "ReservedTable:": "Window Seat"
-                ])
+                let windowSitter = try Purchaser.find(database)
             print(windowSitter)
         } catch {
             print(error)
