@@ -3,6 +3,11 @@
 import Foundation
 import GRDB
 
+// Constants
+
+/// The ID Number that should be fetched
+let selectedPurchaserIds = [1,2,3,4,5,6,7,8,9,10]
+
 /// A Purchaser is the name for the reservation or purchaser at the cafe.
 struct Purchaser: Identifiable, Codable, FetchableRecord, PersistableRecord {
     /// Idendifier for the Purchaser
@@ -24,6 +29,9 @@ struct Purchaser: Identifiable, Codable, FetchableRecord, PersistableRecord {
         case count = "Count"
         case reservedTable = "ReservedTable"
     }
+	enum Columns {
+		static let id = Column("PurchaserId")
+	}
 }
 
 /// The order is the order sent to the kitchen
@@ -96,9 +104,18 @@ struct SwiftPlayground {
                 try database.dumpSchema()
             })
 
-            let windowSitter = try Purchaser.filter(
-                let windowSitter = try Purchaser.find(database)
-            print(windowSitter)
+            try dbQueue.read { db in
+
+            // Finds a purchasers based on their purchaserId
+	let purchaser = try Purchaser.fetchAll(db, ids: selectedPurchaserIds)
+
+
+	if let purchaser {
+		print("purchaser: \(purchaser.name)")
+	} else {
+		print("No purchaser with id \(selectedPurchaserIds)")
+	}
+}
         } catch {
             print(error)
         }
