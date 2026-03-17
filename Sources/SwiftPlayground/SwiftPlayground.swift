@@ -5,9 +5,6 @@ import GRDB
 
 // Constants
 
-/// The ID Number that should be fetched
-let selectedPurchaserIds = [1,2,3,4,5,6,7,8,9,10]
-
 /// A Purchaser is the name for the reservation or purchaser at the cafe.
 struct Purchaser: Identifiable, Codable, FetchableRecord, PersistableRecord {
     /// Idendifier for the Purchaser
@@ -29,9 +26,11 @@ struct Purchaser: Identifiable, Codable, FetchableRecord, PersistableRecord {
         case count = "Count"
         case reservedTable = "ReservedTable"
     }
-	enum Columns {
-		static let id = Column("PurchaserId")
-	}
+    enum Columns {
+        static let reservedTable = Column("ReservedTable")
+        static let name = Column("Name")
+        static let id = Column("PurchaserId")
+    }
 }
 
 /// The order is the order sent to the kitchen
@@ -54,7 +53,9 @@ struct Order: Identifiable, Codable, FetchableRecord, PersistableRecord {
 }
 
 /// The item is the purchasable item that can be added to an order/orderLine
-struct Item: Identifiable, Codable, FetchableRecord, PersistableRecord {
+struct Item: Identifiable, Codable, CustomStringConvertible, FetchableRecord, PersistableRecord {
+
+
     /// Idendifier for the order
     let id: Int
 
@@ -69,6 +70,10 @@ struct Item: Identifiable, Codable, FetchableRecord, PersistableRecord {
         case id = "itemId"
         case name = "Name"
         case price = "Price"
+    }
+
+    var description: String {
+        return "Item \(id) (\(name)) costs $\(price)"
     }
 }
 
@@ -104,18 +109,55 @@ struct SwiftPlayground {
                 try database.dumpSchema()
             })
 
+            // Finds a purchasers based on their purchaserId
+            /// The ID Number that should be fetched
+            let selectedPurchaserIds = 3
             try dbQueue.read { db in
 
-            // Finds a purchasers based on their purchaserId
-	let purchaser = try Purchaser.fetchAll(db, ids: selectedPurchaserIds)
+                let purchaser = try Purchaser.fetchOne(db, key: selectedPurchaserIds)
+                if let purchaser {
+                    print("Selected purchaser is: \(purchaser.name)")
+                } else {
+                    print("\(purchaser)")
+                }
+            }
 
+            // Finds all the people with the IDs in selectedPurchaserIdArray
+            /// The ID Number that should be fetched
+            print("witt array")
+            let selectedPurchaserIdArray = [1, 2, 3]
+            try dbQueue.read { db in
 
-	if let purchaser {
-		print("purchaser: \(purchaser.name)")
-	} else {
-		print("No purchaser with id \(selectedPurchaserIds)")
-	}
-}
+                let purchasers =
+                    try Purchaser
+                    .fetchAll(db, keys: selectedPurchaserIdArray)
+
+                for purchaser in purchasers {
+                    print(purchaser.name)
+                }
+
+            }
+
+            // Find the purchasers with the reserved table
+            print("FestchAll: Ordered by Name")
+            let selectedReservedTable = "Rooftop Table 1"
+
+            try dbQueue.read { db in
+
+                let purchasers =
+                    try Purchaser
+                    .filter(Purchaser.Columns.reservedTable == selectedReservedTable)
+                    .order(Purchaser.Columns.name)
+                    .fetchAll(db)
+
+                for purchaser in purchasers {
+                    print("\(purchaser.name) has reserved \(selectedReservedTable)")
+                }
+            }
+
+            // Item desc
+            print(Cheeseburger.description)
+
         } catch {
             print(error)
         }
