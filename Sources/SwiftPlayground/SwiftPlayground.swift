@@ -164,14 +164,15 @@ struct SwiftPlayground {
             // Item desc
             try dbQueue.read { db in
             
-            let itemTrynaFind = "Cheeseburger"
+            /// The item youre tryna find
+            let itemTrynaFind = 1
 
-            let item =
-                try Item.fetchOne(db, key:itemTrynaFind)
+            let item = try Item.fetchOne(db, key:itemTrynaFind)
+
                 if let item {
                     print(item.description)
                 } else {
-                    print("No item named that!")
+                    print("No item named \(itemTrynaFind)!")
                 }
             
             }
