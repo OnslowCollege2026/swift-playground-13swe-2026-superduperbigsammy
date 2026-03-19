@@ -36,7 +36,7 @@ struct Purchaser: Identifiable, Codable, FetchableRecord, PersistableRecord {
 /// The order is the order sent to the kitchen
 struct Order: Identifiable, Codable, FetchableRecord, PersistableRecord {
     /// Idendifier for the order
-    let id: Int
+    let id: Int?
 
     /// ID of the purchaser connected to the order
     let purchaserId: Int
@@ -106,6 +106,9 @@ struct OrderLine: Codable, FetchableRecord, PersistableRecord {
 struct SwiftPlayground {
     static func main() {
         let dbpath = "Sources/SwiftPlayground/cafe.db"
+
+        var orderLines = [OrderLine]()
+
         do {
             let dbQueue = try DatabaseQueue(path: dbpath)
             print("Connected to database.")
@@ -187,7 +190,14 @@ struct SwiftPlayground {
             }
             }
             
-
+            /// Creates a new order and inserts it into the database.
+            // Id = nil because it is an auto-incrementing primary key, so the database will assign it a value
+            try dbQueue.write { db in
+                let newOrder = Order(id: nil, purchaserId: 1, amount: 20.0)
+                try newOrder.insert(db)
+                print("Inserted new order with id \(newOrder.id)")
+                print(newOrder)
+            }
 
         } catch {
             /// If do fails, print the error out.
