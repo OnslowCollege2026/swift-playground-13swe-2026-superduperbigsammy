@@ -124,7 +124,7 @@ struct SwiftPlayground {
                 if let purchaser {
                     print("Selected purchaser is: \(purchaser.name)")
                 } else {
-                    print("\(purchaser)")
+                    print("nobody named \(purchaser)")
                 }
             }
 
@@ -176,6 +176,17 @@ struct SwiftPlayground {
                 }
             
             }
+
+            try dbQueue.read { db in
+            
+            let findingId = 1
+            let item = try Item.fetchOne(db, id:findingId)
+            let purchaser = try Purchaser.fetchOne(db, id: findingId)
+            if let item, let purchaser{
+                print("\(purchaser.name) has bought \(item)")
+            }
+            }
+
 
         } catch {
             /// If do fails, print the error out.
