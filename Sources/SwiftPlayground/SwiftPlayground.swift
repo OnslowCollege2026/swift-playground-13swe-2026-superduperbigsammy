@@ -75,6 +75,12 @@ struct Item: Identifiable, Codable, CustomStringConvertible, FetchableRecord, Pe
     var description: String {
         return "Item \(id) (\(name)) costs $\(price)"
     }
+
+    enum Columnns {
+        static let id = "ItemId"
+        static let name = "Name"
+        static let price = "Price"
+    }
 }
 
 /// The orderLine is the order sent to the kitchen
@@ -131,7 +137,7 @@ struct SwiftPlayground {
                 let purchasers =
                     try Purchaser
                     .fetchAll(db, keys: selectedPurchaserIdArray)
-
+                    print("People with the IDs: \(selectedPurchaserIdArray)")
                 for purchaser in purchasers {
                     print(purchaser.name)
                 }
@@ -156,9 +162,22 @@ struct SwiftPlayground {
             }
 
             // Item desc
-            print(Cheeseburger.description)
+            try dbQueue.read { db in
+            
+            let itemTrynaFind = "Cheeseburger"
+
+            let item =
+                try Item.fetchOne(db, key:itemTrynaFind)
+                if let item {
+                    print(item.description)
+                } else {
+                    print("No item named that!")
+                }
+            
+            }
 
         } catch {
+            /// If do fails, print the error out.
             print(error)
         }
 
