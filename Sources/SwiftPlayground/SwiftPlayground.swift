@@ -186,6 +186,7 @@ struct SwiftPlayground {
                 print("\(purchaser.name) has bought \(item)")
             }
             }
+            
 
 
         } catch {
