@@ -91,6 +91,10 @@ struct SwiftPlayground {
         ///
         /// *This function is used when the admin is renting out a book on behalf of the customer.*
         func rentBook() {
+            var inRentMenu = true
+            while inRentMenu {
+
+
             // Displays a menu
             print(
                 """
@@ -100,6 +104,7 @@ struct SwiftPlayground {
                 \(menuButtons[1]). Rent a book
                 \(menuButtons[2]). Cancel Operation
                 """)
+                            }
         }
 
         /// returnBook()
@@ -140,7 +145,7 @@ struct SwiftPlayground {
                     \(menuButtons[3]). View a database
                     """)
                 var userInput = readLine()
-                if userInput == menuButtons[0] {
+                if let userInput == menuButtons[0] {
                     rentBook()
                     break
 
