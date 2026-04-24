@@ -53,7 +53,7 @@ struct Customer: Identifiable, Codable, CustomStringConvertible, FetchableRecord
 }
 
 /// A Book is an instance of a book that is inside the library.
-struct Books: Identifiable, Codable, FetchableRecord, PersistableRecord {
+struct Books: Identifiable, Codable, FetchableRecord, PersistableRecord, CustomStringConvertible {
     // A Book's unique identifier.
     let id: Int64
 
@@ -73,6 +73,10 @@ struct Books: Identifiable, Codable, FetchableRecord, PersistableRecord {
         case author = "Author"
         case totalCopies = "TotalCopies"
     }
+
+    enum Columns{
+        static let name = Column("Name")
+    }
     var description: String {
         return """
             Book \(id) - \(title) - \(author). Library holds \(totalCopies) copies.
@@ -84,44 +88,6 @@ struct Books: Identifiable, Codable, FetchableRecord, PersistableRecord {
 struct SwiftPlayground {
 
     static func main() {
-
-        var isProgramRunning: Bool = true
-
-        /// rentBook()
-        ///
-        /// *This function is used when the admin is renting out a book on behalf of the customer.*
-        func rentBook() {
-            var inRentMenu = true
-            while inRentMenu {
-
-
-            // Displays a menu
-            print(
-                """
-                \(header) RENT A BOOK
-                Please select an operation.
-                \(menuButtons[0]). Register a customer (Required)
-                \(menuButtons[1]). Rent a book
-                \(menuButtons[2]). Cancel Operation
-                """)
-                            }
-        }
-
-        /// returnBook()
-        ///
-        /// *This function is used when the customer wants to return a book.*
-        // PUT HERE
-
-        /// editData()
-        ///
-        /// *This function is used when the customer wants to return a book.*
-        // PUT HERE
-
-        /// viewData()
-        ///
-        /// *This function is used when the customer wants to return a book.*
-        // PUT HERE
-
         do {
 
             // Stores the database queue, which is where the list of operations go.
@@ -129,9 +95,99 @@ struct SwiftPlayground {
             print("Connected to database.")
 
             // Dump the schema to ensure we are connected to the correct database file.
-            try dbQueue.read({ database in
+            do {dbQueue.read({ database in
                 try database.dumpSchema()
-            })
+            })} catch
+
+            var isProgramRunning: Bool = true
+
+            }
+
+            /// rentBook()
+            ///
+            /// *This function is used when the admin is renting out a book on behalf of the customer.*
+            func rentBook() {
+                // STarts the loop which repeats if input not valid.
+                var inRentMenu = true
+                while inRentMenu {
+                    // Displays a menu
+                    print(
+                        """
+                        \(header) RENT A BOOK
+                        Please select an operation.
+                        \(menuButtons[0]). Register a customer (Required)
+                        \(menuButtons[1]). Rent a book
+                        \(menuButtons[2]). Cancel Operation
+                        """)
+                }
+                if readLine() == menuButtons[0] {
+                    //registerCustomer()
+                }
+                if readLine() == menuButtons[1] {
+                    print("Here are all the books currently held in the library:")
+                    print()
+                    for book in Books {
+                        Books.description
+                    }
+                }
+            }
+
+            /// returnBook()
+            ///
+            /// *This function is used when the customer wants to return a book.*
+            func returnBook() {
+                // STarts the loop which repeats if input not valid.
+                var inReturnMenu = true
+                while inReturnMenu {
+                    // Displays a menu
+                    print(
+                        """
+                        \(header) RENT A BOOK
+                        Please select an operation.
+                        \(menuButtons[0]). Register a customer (Required)
+                        \(menuButtons[1]). Rent a book
+                        \(menuButtons[2]). Cancel Operation
+                        """)
+                }
+            }
+
+            /// editData()
+            ///
+            /// *This function is used when the customer wants to return a book.*
+            func editData() {
+                // STarts the loop which repeats if input not valid.
+                var inEditDataMenu = true
+                while inEditDataMenu {
+                    // Displays a menu
+                    print(
+                        """
+                        \(header) RENT A BOOK
+                        Please select an operation.
+                        \(menuButtons[0]). Register a customer (Required)
+                        \(menuButtons[1]). Rent a book
+                        \(menuButtons[2]). Cancel Operation
+                        """)
+                }
+            }
+
+            /// viewData()
+            ///
+            /// *This function is used when the customer wants to return a book.*
+            func viewData() {
+                // STarts the loop which repeats if input not valid.
+                var inViewDataMenu = true
+                while inViewDataMenu {
+                    // Displays a menu
+                    print(
+                        """
+                        \(header) RENT A BOOK
+                        Please select an operation.
+                        \(menuButtons[0]). Register a customer (Required)
+                        \(menuButtons[1]). Rent a book
+                        \(menuButtons[2]). Cancel Operation
+                        """)
+                }
+            }
 
             while isProgramRunning == true {
 
@@ -145,14 +201,19 @@ struct SwiftPlayground {
                     \(menuButtons[3]). View a database
                     """)
                 var userInput = readLine()
-                if let userInput == menuButtons[0] {
+                if userInput == menuButtons[0] {
                     rentBook()
                     break
 
                 } else if userInput == menuButtons[1] {
-
+                    returnBook()
+                    break
                 } else if userInput == menuButtons[2] {
-
+                    rentBook()
+                    break
+                } else if userInput == menuButtons[3] {
+                    viewData()
+                    break
                 } else {
                     print("Please select an operation by typing \(menuButtons)")
                 }
