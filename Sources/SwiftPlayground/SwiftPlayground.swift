@@ -193,7 +193,7 @@ func rentBook(dbQueue: DatabaseQueue) {
                     } else {
                         print("No book found with id \(rentingId).")
                     }
-
+                    viewData(tableChosen: menuButtons[1], dbQueue: dbQueue)
                     print("Please type the name of the customer renting out the book.")
 
                     // the name of the customer renting the book.
@@ -202,10 +202,10 @@ func rentBook(dbQueue: DatabaseQueue) {
                     try dbQueue.read { db in
                         let chosenCustomer = try Books.fetchOne(db, key: customerName)
                         if let chosenCustomer {
-                            print("\(chosenCustomer) has sucessfully rented out \(chosenBook)")
+                            print("\(chosenCustomer) is attempting to rent out \(chosenBook)")
                         } else {
                             print("""
-                            No customer found with name: \(customerName).
+                            No customer found with name: \(chosenCustomer).
                             
                             Register new customer?
                             \(menuButtons[0]). Register new customer
