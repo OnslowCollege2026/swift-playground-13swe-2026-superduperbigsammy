@@ -8,7 +8,7 @@ import Foundation
 import GRDB
 
 // Constants
-let dbPath = "./library.db"
+let dbPath = "Sources/SwiftPlayground/library.db"
 
 // This header goes at the top of each menu page.
 let header: String = """
@@ -45,6 +45,10 @@ struct Customer: Identifiable, Codable, CustomStringConvertible, FetchableRecord
         case email = "Email"
     }
 
+    enum Columns {
+        static let name = Column("Name")
+    }
+
     var description: String {
         return """
             User \(id) - \(name). Contact: \(email) \(phone)
@@ -77,22 +81,21 @@ struct Books: Identifiable, Codable, FetchableRecord, PersistableRecord, CustomS
     }
 
     enum Columns {
-        static let title = Column("Title")
+        static let id = Column("BookId")
     }
     var description: String {
         return """
-            Book \(id) - \(title) - \(author). Library holds \(totalCopies) copies.
+            [BOOK ID: \(id)] - \(title) - \(author). - *(\(totalCopies) copies remaining.)*
             """
     }
 }
 
 /// clear()
-/// 
+///
 /// use clear() anywhere to clear the terminal.
-func clear(){
+func clear() {
     system("clear")
 }
-
 
 /// viewData()
 ///
@@ -109,19 +112,16 @@ func viewData(tableChosen: String, dbQueue: DatabaseQueue) {
     // View the "Books" data
     case menuButtons[0]:
         do {
-            // Attempt to read and display the data of the books table, ordered by title.
+            // Attempt to read and display the data of the books table, ordered by id.
             try dbQueue.read { db in
-                let Books =
+                let allBooks =
                     try Books
-                    .order(Books.Columns.title)
+                    .order(Books.Columns.id)
                     .fetchAll(db)
-                print(Books)
                 // Print the description for every book in the table.
-                for Books in Books {
-                    print(Books)
-                    print(Books)
-                    if Books.totalCopies > 0 {
-                        print("Hello")
+                for book in allBooks {
+                    if book.totalCopies > 0 {
+                        print(book.description)
                     }
                 }
             }
@@ -132,12 +132,15 @@ func viewData(tableChosen: String, dbQueue: DatabaseQueue) {
     // menuButtons 1 is the customers table.
     case menuButtons[1]:
         do {
-            // Attempt to read the data of the books table
+            // Attempt to read and display the data of the books table, ordered by title.
             try dbQueue.read { db in
-                let allBooks = try Books.fetchAll(db)
+                let allCustomers =
+                    try Customer
+                    .order(Customer.Columns.name)
+                    .fetchAll(db)
                 // Print the description for every book in the table.
-                for book in allBooks {
-                    print(book.description)
+                for customer in allCustomers {
+                    print(customer)
                 }
             }
         } catch {
@@ -154,7 +157,7 @@ func viewData(tableChosen: String, dbQueue: DatabaseQueue) {
 ///
 /// *This function is used when the admin is renting out a book on behalf of the customer.*
 func rentBook(dbQueue: DatabaseQueue) {
-clear()
+    clear()
     // STarts the loop which repeats if input not valid.
     var inRentMenu = true
     while inRentMenu {
@@ -174,7 +177,57 @@ clear()
         // Display all the books and prompt the user to register a book.
         case menuButtons[1]:
             print("Here are all the books currently in the library.")
+            // Displays all the books.
             viewData(tableChosen: menuButtons[0], dbQueue: dbQueue)
+            do {
+                print("Please type the ID number of the book you wish to rent.")
+
+                // the ID that the admin types to select a book.
+                let rentingId = readLine()
+
+                // Check if the book exists and confirm.
+                try dbQueue.read { db in
+                    let chosenBook = try Books.fetchOne(db, key: rentingId)
+                    if let chosenBook {
+                        print("You have selected \(chosenBook) by \(chosenBook.author)")
+                    } else {
+                        print("No book found with id \(rentingId).")
+                    }
+
+                    print("Please type the name of the customer renting out the book.")
+
+                    // the name of the customer renting the book.
+                    let customerName = readLine()
+
+                    try dbQueue.read { db in
+                        let chosenCustomer = try Books.fetchOne(db, key: customerName)
+                        if let chosenCustomer {
+                            print("\(chosenCustomer) has sucessfully rented out \(chosenBook)")
+                        } else {
+                            print("""
+                            No customer found with name: \(customerName).
+                            
+                            Register new customer?
+                            \(menuButtons[0]). Register new customer
+                            \(menuButtons[1]). Return to main menu.
+
+                            """)
+                            let userInput = readLine()
+                            switch userInput {
+                                case menuButtons[0]:
+                                print("Register new customer")
+                                //registerNewCustomer()
+                                case menuButtons[1]:
+                                return
+                                default:
+                                print("Returning to main menu.")
+                            }
+                        }
+                    }
+                }
+            } catch {
+                print(error)
+            }
 
         // If the userInput = menuButtons2, cancel the operation.
         case menuButtons[2]:
@@ -239,16 +292,17 @@ struct SwiftPlayground {
 
             // Dump the schema to ensure we are connected to the correct database file.
             do {
-                try? dbQueue.read({ database in
-                    try database.dumpSchema()
-                })
+                try dbQueue.read { db in
+                    let schema = try db.dumpSchema()
+                    print(schema)
+                }
             }
             var inMainMenu = true
 
             while inMainMenu == true {
-                viewData(tableChosen: menuButtons[0], dbQueue: dbQueue)
                 print(
                     """
+                    \n\n\n\n\n
                     \(header) MAIN MENU
                     Welcome to the Onslow College Library admin panel. Please select an operation.
                     \(menuButtons[0]). Rent a book
@@ -281,6 +335,9 @@ struct SwiftPlayground {
                         viewData(tableChosen: menuButtons[0], dbQueue: dbQueue)
                     }
                     break
+                // Sends the user to the viewData function
+                case menuButtons[4]:
+                    inMainMenu = false
                 default:
                     print("Please select an operation by typing \(menuButtons)")
                 }
