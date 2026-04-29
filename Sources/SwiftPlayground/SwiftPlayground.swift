@@ -16,9 +16,9 @@ let header: String = """
     \(Date()) - ONSLOW COLLEGE LIBRARY - ADMIN PANEL -
     """
 
-// The buttons for the menus, used to make selections. Edit here for global change of menuButtons
+/// The buttons for the menus, used to make selections. Edit these for global change of menuButtons
 let menuButtons =
-    ["1", "2", "3", "4"]
+    ["1", "2", "3", "4", "5"]
 
 // Structs
 
@@ -54,6 +54,8 @@ struct Customer: Identifiable, Codable, CustomStringConvertible, FetchableRecord
 
 /// A Book is an instance of a book that is inside the library.
 struct Books: Identifiable, Codable, FetchableRecord, PersistableRecord, CustomStringConvertible {
+    static let dataBaseTableName = "Books"
+
     // A Book's unique identifier.
     let id: Int64
 
@@ -75,7 +77,7 @@ struct Books: Identifiable, Codable, FetchableRecord, PersistableRecord, CustomS
     }
 
     enum Columns {
-        static let name = Column("Name")
+        static let title = Column("Title")
     }
     var description: String {
         return """
@@ -84,6 +86,14 @@ struct Books: Identifiable, Codable, FetchableRecord, PersistableRecord, CustomS
     }
 }
 
+/// clear()
+/// 
+/// use clear() anywhere to clear the terminal.
+func clear(){
+    system("clear")
+}
+
+
 /// viewData()
 ///
 /// - Parameters:
@@ -91,20 +101,28 @@ struct Books: Identifiable, Codable, FetchableRecord, PersistableRecord, CustomS
 ///         - tableChosen = menuButtons[0]: The Books table
 ///         - tableChosen = menuButtons[1]: the Customers table
 ///     - dbQueue: The database queue for the database
-/// 
+///
 /// viewData() is used to display tables from the dbPath
 func viewData(tableChosen: String, dbQueue: DatabaseQueue) {
-
+    // This switch uses the tableCHosen to determine which table to display
     switch tableChosen {
     // View the "Books" data
     case menuButtons[0]:
         do {
-            // Attempt to read the data of the books table
+            // Attempt to read and display the data of the books table, ordered by title.
             try dbQueue.read { db in
-                let allBooks = try Books.fetchAll(db)
+                let Books =
+                    try Books
+                    .order(Books.Columns.title)
+                    .fetchAll(db)
+                print(Books)
                 // Print the description for every book in the table.
-                for book in allBooks {
-                    print(book.description)
+                for Books in Books {
+                    print(Books)
+                    print(Books)
+                    if Books.totalCopies > 0 {
+                        print("Hello")
+                    }
                 }
             }
         } catch {
@@ -113,7 +131,7 @@ func viewData(tableChosen: String, dbQueue: DatabaseQueue) {
 
     // menuButtons 1 is the customers table.
     case menuButtons[1]:
-                do {
+        do {
             // Attempt to read the data of the books table
             try dbQueue.read { db in
                 let allBooks = try Books.fetchAll(db)
@@ -135,7 +153,8 @@ func viewData(tableChosen: String, dbQueue: DatabaseQueue) {
 /// rentBook()
 ///
 /// *This function is used when the admin is renting out a book on behalf of the customer.*
-func rentBook() {
+func rentBook(dbQueue: DatabaseQueue) {
+clear()
     // STarts the loop which repeats if input not valid.
     var inRentMenu = true
     while inRentMenu {
@@ -148,14 +167,31 @@ func rentBook() {
             \(menuButtons[1]). Rent a book
             \(menuButtons[2]). Cancel Operation
             """)
-    }
 
+        let userInput = readLine()
+
+        switch userInput {
+        // Display all the books and prompt the user to register a book.
+        case menuButtons[1]:
+            print("Here are all the books currently in the library.")
+            viewData(tableChosen: menuButtons[0], dbQueue: dbQueue)
+
+        // If the userInput = menuButtons2, cancel the operation.
+        case menuButtons[2]:
+            print("Operation Cancelled")
+            inRentMenu = false
+
+        default:
+            print("There was an error with your operation.")
+        }
+    }
 }
 
 /// returnBook()
 ///
 /// *This function is used when the customer wants to return a book.*
 func returnBook() {
+    clear()
     // STarts the loop which repeats if input not valid.
     var inReturnMenu = true
     while inReturnMenu {
@@ -175,6 +211,7 @@ func returnBook() {
 ///
 /// *This function is used when the customer wants to return a book.*
 func editData() {
+    clear()
     // STarts the loop which repeats if input not valid.
     var inEditDataMenu = true
     while inEditDataMenu {
@@ -206,7 +243,6 @@ struct SwiftPlayground {
                     try database.dumpSchema()
                 })
             }
-
             var inMainMenu = true
 
             while inMainMenu == true {
@@ -219,27 +255,34 @@ struct SwiftPlayground {
                     \(menuButtons[1]). Return a book
                     \(menuButtons[2]). Edit a database
                     \(menuButtons[3]). View a database
+                    \(menuButtons[4]). Shut down system.
                     """)
-                var userInput = readLine()
+                let userInput = readLine()
 
                 switch userInput {
+                // Sends the user to the renBook function
                 case menuButtons[0]:
-                    rentBook()
-                    break
+                    rentBook(dbQueue: dbQueue)
+                    inMainMenu = false
 
+                // Sends the user to the returnBook function
                 case menuButtons[1]:
                     returnBook()
-                    break
+                    inMainMenu = false
+
+                // Sends the user to the editData function
                 case menuButtons[2]:
-                    rentBook()
-                    break
+                    rentBook(dbQueue: dbQueue)
+                    inMainMenu = false
+
+                // Sends the user to the viewData function
                 case menuButtons[3]:
-                    let tableChosen = userInput
-                    viewData(tableChosen: "placeholder", dbQueue: dbQueue)
+                    do {
+                        viewData(tableChosen: menuButtons[0], dbQueue: dbQueue)
+                    }
                     break
                 default:
                     print("Please select an operation by typing \(menuButtons)")
-
                 }
 
             }
