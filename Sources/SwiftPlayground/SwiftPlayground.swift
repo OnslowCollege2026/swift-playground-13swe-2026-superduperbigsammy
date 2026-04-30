@@ -18,7 +18,7 @@ let header: String = """
 
 /// The buttons for the menus, used to make selections. Edit these for global change of menuButtons
 let menuButtons =
-    ["1", "2", "3", "4", "5"]
+    ["1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12"]
 
 // Structs
 
@@ -51,7 +51,7 @@ struct Customer: Identifiable, Codable, CustomStringConvertible, FetchableRecord
 
     var description: String {
         return """
-            User \(id) - \(name). Contact: \(email) \(phone)
+            [ID: \(id)]. - \(name). [Contact: \(email), \(phone)]
             """
     }
 }
@@ -85,7 +85,7 @@ struct Books: Identifiable, Codable, FetchableRecord, PersistableRecord, CustomS
     }
     var description: String {
         return """
-            [BOOK ID: \(id)] - \(title) - \(author). - *(\(totalCopies) copies remaining.)*
+            [ID: \(id)]. - \(title) - \(author). (\(totalCopies) copies remaining.)
             """
     }
 }
@@ -109,8 +109,27 @@ func clear() {
 func viewData(tableChosen: String, dbQueue: DatabaseQueue) {
     // This switch uses the tableCHosen to determine which table to display
     switch tableChosen {
-    // View the "Books" data
-    case menuButtons[0]:
+
+    // View all "Books" records
+    case menuButtons[6]:
+        do {
+            // Attempt to read and display the data of the books table, ordered by id.
+            try dbQueue.read { db in
+                let allBooks =
+                    try Books
+                    .order(Books.Columns.id)
+                    .fetchAll(db)
+                // Print the description for every book in the table.
+                for book in allBooks {
+                    print(book.description)
+                }
+            }
+        } catch {
+            print(error)
+        }
+
+    // View avalible books
+    case menuButtons[7]:
         do {
             // Attempt to read and display the data of the books table, ordered by id.
             try dbQueue.read { db in
@@ -129,8 +148,30 @@ func viewData(tableChosen: String, dbQueue: DatabaseQueue) {
             print(error)
         }
 
-    // menuButtons 1 is the customers table.
-    case menuButtons[1]:
+    // View unavalible books
+    case menuButtons[8]:
+        do {
+            // Attempt to read and display the data of the books table, ordered by id.
+            try dbQueue.read { db in
+                let allBooks =
+                    try Books
+                    .order(Books.Columns.id)
+                    .fetchAll(db)
+
+                // Print the description for every book in the table.
+                for book in allBooks {
+                    if book.totalCopies <= 0 {
+                        print(book.description)
+                    }
+                }
+
+            }
+        } catch {
+            print(error)
+        }
+
+    // menuButtons 5 is the customers table.
+    case menuButtons[5]:
         do {
             // Attempt to read and display the data of the books table, ordered by title.
             try dbQueue.read { db in
@@ -148,8 +189,7 @@ func viewData(tableChosen: String, dbQueue: DatabaseQueue) {
         }
 
     default:
-        print("Please try again.")
-
+        print("Error displaying data")
     }
 }
 
@@ -159,124 +199,39 @@ func viewData(tableChosen: String, dbQueue: DatabaseQueue) {
 func rentBook(dbQueue: DatabaseQueue) {
     clear()
     // STarts the loop which repeats if input not valid.
-    var inRentMenu = true
-    while inRentMenu {
-        // Displays a menu
-        print(
-            """
-            \(header) RENT A BOOK
-            Please select an operation.
-            \(menuButtons[0]). Register a customer (Required)
-            \(menuButtons[1]). Rent a book
-            \(menuButtons[2]). Cancel Operation
-            """)
 
-        let userInput = readLine()
+    print("Here are all the books currently avaliable in the library.")
+    // Displays all the books.
+    viewData(tableChosen: menuButtons[7], dbQueue: dbQueue)
+    print("Please type the ID number of the book you wish to rent.")
+    let selectedBookId = readLine()
 
-        switch userInput {
-        // Display all the books and prompt the user to register a book.
-        case menuButtons[1]:
-            print("Here are all the books currently in the library.")
-            // Displays all the books.
-            viewData(tableChosen: menuButtons[0], dbQueue: dbQueue)
-            do {
-                print("Please type the ID number of the book you wish to rent.")
+    do {
 
-                // the ID that the admin types to select a book.
-                let rentingId = readLine()
-
-                // Check if the book exists and confirm.
-                try dbQueue.read { db in
-                    let chosenBook = try Books.fetchOne(db, key: rentingId)
-                    if let chosenBook {
-                        print("You have selected \(chosenBook) by \(chosenBook.author)")
-                    } else {
-                        print("No book found with id \(rentingId).")
-                    }
-                    viewData(tableChosen: menuButtons[1], dbQueue: dbQueue)
-                    print("Please type the name of the customer renting out the book.")
-
-                    // the name of the customer renting the book.
-                    let customerName = readLine()
-
-                    try dbQueue.read { db in
-                        let chosenCustomer = try Books.fetchOne(db, key: customerName)
-                        if let chosenCustomer {
-                            print("\(chosenCustomer) is attempting to rent out \(chosenBook)")
-                        } else {
-                            print("""
-                            No customer found with name: \(chosenCustomer).
-                            
-                            Register new customer?
-                            \(menuButtons[0]). Register new customer
-                            \(menuButtons[1]). Return to main menu.
-
-                            """)
-                            let userInput = readLine()
-                            switch userInput {
-                                case menuButtons[0]:
-                                print("Register new customer")
-                                //registerNewCustomer()
-                                case menuButtons[1]:
-                                return
-                                default:
-                                print("Returning to main menu.")
-                            }
-                        }
-                    }
-                }
-            } catch {
-                print(error)
+        // Check if the book exists and confirm.
+        try dbQueue.read { db in
+            let chosenBook = try Books.fetchOne(db, key: selectedBookId)
+            if let chosenBook {
+                print("You have selected \(chosenBook) by \(chosenBook.author)")
             }
-
-        // If the userInput = menuButtons2, cancel the operation.
-        case menuButtons[2]:
-            print("Operation Cancelled")
-            inRentMenu = false
-
-        default:
-            print("There was an error with your operation.")
         }
-    }
-}
+        viewData(tableChosen: menuButtons[1], dbQueue: dbQueue)
+        print("Please type the name of the customer renting out the book.")
+        // the name of the customer renting the book.
+    } catch { print(error) }
+    do {
+        let customerName = readLine()
+        try dbQueue.read { db in
+            let chosenCustomer = try Customer.fetchOne(db, key: customerName)
+            if let chosenCustomer {
+                print("\(chosenCustomer) was selected.")
+            } else {
+                print("No customer found with \(customerName)")
+            }
+        }
 
-/// returnBook()
-///
-/// *This function is used when the customer wants to return a book.*
-func returnBook() {
-    clear()
-    // STarts the loop which repeats if input not valid.
-    var inReturnMenu = true
-    while inReturnMenu {
-        // Displays a menu
-        print(
-            """
-            \(header) RENT A BOOK
-            Please select an operation.
-            \(menuButtons[0]). Register a customer (Required)
-            \(menuButtons[1]). Rent a book
-            \(menuButtons[2]). Cancel Operation
-            """)
-    }
-}
-
-/// editData()
-///
-/// *This function is used when the customer wants to return a book.*
-func editData() {
-    clear()
-    // STarts the loop which repeats if input not valid.
-    var inEditDataMenu = true
-    while inEditDataMenu {
-        // Displays a menu
-        print(
-            """
-            \(header) RENT A BOOK
-            Please select an operation.
-            \(menuButtons[0]). Register a customer (Required)
-            \(menuButtons[1]). Rent a book
-            \(menuButtons[2]). Cancel Operation
-            """)
+    } catch {
+        print(error)
     }
 }
 
@@ -307,9 +262,20 @@ struct SwiftPlayground {
                     Welcome to the Onslow College Library admin panel. Please select an operation.
                     \(menuButtons[0]). Rent a book
                     \(menuButtons[1]). Return a book
-                    \(menuButtons[2]). Edit a database
-                    \(menuButtons[3]). View a database
-                    \(menuButtons[4]). Shut down system.
+
+                    \(menuButtons[2]). Create a customer record
+                    \(menuButtons[3]). Create a book record
+
+                    \(menuButtons[4]). Edit a customer
+                    \(menuButtons[5]). View all customers
+
+                    \(menuButtons[6]). View all books done
+                    \(menuButtons[7]). View avaliable books done
+                    \(menuButtons[8]). View unavaliable books done
+
+                    \(menuButtons[9]). Delete a book record
+                    \(menuButtons[10]). Delete a customer record
+                    \(menuButtons[11]). Shut down system.
                     """)
                 let userInput = readLine()
 
@@ -317,26 +283,24 @@ struct SwiftPlayground {
                 // Sends the user to the renBook function
                 case menuButtons[0]:
                     rentBook(dbQueue: dbQueue)
-                    inMainMenu = false
 
-                // Sends the user to the returnBook function
-                case menuButtons[1]:
-                    returnBook()
-                    inMainMenu = false
+                // Views all customers
+                case menuButtons[5]:
+                    viewData(tableChosen: menuButtons[5], dbQueue: dbQueue)
 
-                // Sends the user to the editData function
-                case menuButtons[2]:
-                    rentBook(dbQueue: dbQueue)
-                    inMainMenu = false
+                // Views all books
+                case menuButtons[6]:
+                    viewData(tableChosen: menuButtons[6], dbQueue: dbQueue)
+                // Views all avalible books
+                case menuButtons[7]:
+                    viewData(tableChosen: menuButtons[7], dbQueue: dbQueue)
+                // Views all unavalible books
+                case menuButtons[8]:
+                    viewData(tableChosen: menuButtons[8], dbQueue: dbQueue)
 
-                // Sends the user to the viewData function
-                case menuButtons[3]:
-                    do {
-                        viewData(tableChosen: menuButtons[0], dbQueue: dbQueue)
-                    }
-                    break
-                // Sends the user to the viewData function
-                case menuButtons[4]:
+                // Shut down system.
+                case menuButtons[11]:
+                    print("Thank you for using OC Library admin panel.")
                     inMainMenu = false
                 default:
                     print("Please select an operation by typing \(menuButtons)")
