@@ -117,6 +117,14 @@ struct RentedBooks: Codable, FetchableRecord, PersistableRecord {
     }
 }
 
+/// waitForUser()
+/// 
+/// Waits for the user's confirmation (Return/Enter) before continuing. This is required to make sure user can see data.
+func waitForUser(){
+    print("Press return to continue")
+    _ = readLine()
+}
+
 // MARK: clear()
 /// clear()
 ///
@@ -220,6 +228,7 @@ func viewData(tableChosen: String, dbQueue: DatabaseQueue) {
     default:
         print("Error displaying data")
     }
+    waitForUser()
 }
 
 // MARK: writeData()
@@ -303,7 +312,8 @@ func deleteData(tableChosen: String, dbQueue: DatabaseQueue) {
     case menuButtons[9]:
         viewData(tableChosen: menuButtons[6], dbQueue: dbQueue)
         print("Please select a book to delete (by ID):")
-        let userInput = readLine()
+        guard let selectedBookId = readLine()
+        else{print("Invalid ID."); return}
 
     // DELETE CUSTOMER
     case menuButtons[10]:
