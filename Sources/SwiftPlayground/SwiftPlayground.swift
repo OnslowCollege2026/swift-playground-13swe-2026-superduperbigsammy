@@ -77,7 +77,7 @@ struct Books: Identifiable, Codable, FetchableRecord, PersistableRecord, CustomS
     let totalCopies: Int
 
     // The amount of copies avaliable upon entry
-    let avaliableCopies: Int
+    var avaliableCopies: Int
 
     // Syncs the names between swift variables and titles in the database
     enum CodingKeys: String, CodingKey {
@@ -101,8 +101,8 @@ struct Books: Identifiable, Codable, FetchableRecord, PersistableRecord, CustomS
 // MARK: RentedBook Struct
 struct RentedBooks: Codable, FetchableRecord, PersistableRecord {
     // bookID and CustomerID Imported from Books and Customer tables.
-    var bookId: Int
-    var customerId: Int
+    var bookId: Books?
+    var customerId: Customer?
     // The date the book was rented out on
     var bookedDate: Date
 
@@ -346,7 +346,7 @@ func deleteData(tableChosen: String, dbQueue: DatabaseQueue) {
                     print("This book does not exist.")
                 }
             }
-            viewData(tableChosen: menuButtons[1], dbQueue: dbQueue)
+            viewData(tableChosen: menuButtons[5], dbQueue: dbQueue)
             print("Please type the name of the customer renting out the book.")
 
             // the name of the customer renting the book.
@@ -354,7 +354,7 @@ func deleteData(tableChosen: String, dbQueue: DatabaseQueue) {
             print("Enter customer name:")
             guard let customerName = readLine()
             else {
-                print("No such customer with selected name found.")
+                print("Invalid name.")
                 return
             }
             var chosenCustomer: Customer?
@@ -369,9 +369,18 @@ func deleteData(tableChosen: String, dbQueue: DatabaseQueue) {
             let currentDate = Date()
             let dueDate = Calendar.current.date(byAdding: .day, value: 7, to: currentDate)!
             try dbQueue.write { db in
-                var newRentedBook = RentedBooks(
-                    bookId: bookId, customerId: customerId, bookedDate: Date(), dueDate: dueDate)
+                let newRentedBook = RentedBooks(
+                    bookId: chosenBook, customerId: chosenCustomer, bookedDate: Date(), dueDate: dueDate)
+                    try newRentedBook.insert(db)
             }
+            try dbQueue.write {db in
+            chosenBook?.avaliableCopies -= 1
+            }
+            
+            print(chosenBook)
+            print("Book rented sucessfully. please press any button to continue.")
+            _ = readLine()
+
 
         } catch {
             print(error)
