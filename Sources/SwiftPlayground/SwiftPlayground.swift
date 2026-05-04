@@ -311,7 +311,7 @@ func deleteData(tableChosen: String, dbQueue: DatabaseQueue) {
         print("Please select a record to delete (by ID)")
 
     default:
-        print("Invalid table selected for data removal.")
+        print("Operation cancelled. (nil input)")
     }
 
     // MARK: rentBook()
@@ -370,28 +370,87 @@ func deleteData(tableChosen: String, dbQueue: DatabaseQueue) {
             let dueDate = Calendar.current.date(byAdding: .day, value: 7, to: currentDate)!
             try dbQueue.write { db in
                 let newRentedBook = RentedBooks(
-                    bookId: chosenBook, customerId: chosenCustomer, bookedDate: Date(), dueDate: dueDate)
-                    try newRentedBook.insert(db)
+                    bookId: chosenBook, customerId: chosenCustomer, bookedDate: Date(),
+                    dueDate: dueDate)
+                try newRentedBook.insert(db)
+
+                chosenBook?.avaliableCopies -= 1
             }
-            try dbQueue.write {db in
-            chosenBook?.avaliableCopies -= 1
-            }
-            
+
             print(chosenBook)
             print("Book rented sucessfully. please press any button to continue.")
-            _ = readLine()
-
+            let userInput = readLine()
 
         } catch {
             print(error)
         }
     }
 
+    // MARK: updateData()
+    /// updateData(tableChosen: String, dbQueue: DatabaseQueue)
+    ///
+    /// - Parameters
+    ///     - tableChosen: The table selected
+    ///     - dbQueue: The database queue path
+    ///
+    /// Allows the updating of data of specified table within the database.
+    func updateData(tableChosen: String, dbQueue: DatabaseQueue) {
+        do {
+            switch tableChosen {
+
+            // UPDATE CUSTOMER RECORD
+            case menuButtons[4]:
+
+                // View the customers table
+                viewData(tableChosen: menuButtons[5], dbQueue: dbQueue)
+                print("Select the ID of the customer you wish to update.")
+
+                guard let chosenCustomerId = readLine()
+                else {
+                    print("Invalid customer ID value provided.")
+                    return
+                }
+                let chosenCustomerIdInt = Int(chosenCustomerId)
+
+                print("The values you enter below will be all the updated values for the customer.")
+                print("Enter customer's name:")
+                guard let newCustomerName = readLine()
+                else {
+                    print("Invalid value provided")
+                    return
+                }
+
+                print("Enter customer's email:")
+                guard let newCustomerEmail = readLine()
+                else {
+                    print("Invalid value provided")
+                    return
+                }
+
+                print("Enter customer's phone:")
+                guard let newCustomerPhone = readLine()
+                else {
+                    print("Invalid value provided")
+                    return
+                }
+
+                try dbQueue.write { db in
+                    var updatedCustomerDetails = Customer(
+                        id: chosenCustomerIdInt, name: newCustomerName, phone: newCustomerPhone,
+                        email: newCustomerEmail)
+                    try updatedCustomerDetails.save(db)
+                }
+
+            default:
+                print("Invalid table selected for updating of data.")
+            }
+        } catch { print(error) }
+    }
+
     @main
     struct SwiftPlayground {
         // MARK: main()
         static func main() {
-            print("\n\n\n\n\n")
             do {
 
                 // Stores the database queue, which is where the list of operations go.
@@ -433,9 +492,10 @@ func deleteData(tableChosen: String, dbQueue: DatabaseQueue) {
                         \(menuButtons[10]). Delete a customer record
                         \(menuButtons[11]). Shut down system. done
                         """)
-                    // MARK: userInput Switch
                     let userInput = readLine()
 
+                    // MARK: userInput Switch
+                    // Filters the user's input using the menuButtons as shown before.
                     switch userInput {
                     // RENT BOOK
                     case menuButtons[0]:
@@ -452,6 +512,10 @@ func deleteData(tableChosen: String, dbQueue: DatabaseQueue) {
                     // WRITE NEW BOOK
                     case menuButtons[3]:
                         writeData(tableChosen: menuButtons[3], dbQueue: dbQueue)
+
+                    // WRITE NEW BOOK
+                    case menuButtons[4]:
+                        updateData(tableChosen: menuButtons[4], dbQueue: dbQueue)
 
                     // VIEW CUSTOMERS (all)
                     case menuButtons[5]:
@@ -473,7 +537,6 @@ func deleteData(tableChosen: String, dbQueue: DatabaseQueue) {
                     case menuButtons[11]:
                         clear()
                         print("Thank you for using the OC Library admin panel.")
-                        sleep(1)
                         print("System shutting down...")
                         inMainMenu = false
                     default:
