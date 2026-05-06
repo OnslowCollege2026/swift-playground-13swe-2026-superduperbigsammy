@@ -19,7 +19,7 @@ let header: String = """
 
 /// The buttons for the menus, used to make selections. Edit these for global change of menuButtons
 let menuButtons =
-    ["1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12"]
+    ["1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13","14"]
 
 // Structs
 
@@ -61,7 +61,7 @@ struct Customer: Identifiable, Codable, CustomStringConvertible, FetchableRecord
 
 // MARK: Book Struct
 /// A Book is an instance of a book that is inside the library.
-struct Books: Identifiable, Codable, FetchableRecord, PersistableRecord, CustomStringConvertible {
+struct Books: Identifiable, Codable, FetchableRecord, PersistableRecord, MutablePersistableRecord, CustomStringConvertible {
     static let dataBaseTableName = "Books"
 
     // A Book's unique identifier.
@@ -90,6 +90,7 @@ struct Books: Identifiable, Codable, FetchableRecord, PersistableRecord, CustomS
 
     enum Columns {
         static let id = Column("BookId")
+        static let author = Column("Author")
     }
     var description: String {
         return """
@@ -225,6 +226,59 @@ func viewData(tableChosen: String, dbQueue: DatabaseQueue) {
             print(error)
         }
 
+            // menuButtons 9 is for searching the customers by name.
+    case menuButtons[9]:
+        do {
+            print("Please enter the customer name:")
+            guard let customerName = readLine()
+            else{
+                print("Invalid name given.")
+                return
+            }
+            // Attempt to read and display the data of the books table, ordered by title.
+            try dbQueue.read { db in
+                let allCustomersWithName =
+                    try Customer
+                    .filter(Customer.Columns.name == customerName)
+                    .fetchAll(db)
+                // Print the description for every book in the table.
+                print("Here are all the customers with \(customerName)")
+                for customer in allCustomersWithName {
+                    print(customer)
+                }
+            }
+            waitForUser()
+        } catch {
+            print(error)
+        }
+
+    // SEARCH AUTHOR
+    case menuButtons[10]:
+        do {
+            print("Please enter the author's name:")
+            guard let bookAuthor = readLine()
+            else{
+                print("Invalid author given.")
+                return
+            }
+
+            // Attempt to read and display the data of the books table, ordered by title.
+            try dbQueue.read { db in
+                let allBooksWithAuthor =
+                    try Books
+                    .filter(Books.Columns.author == bookAuthor)
+                    .fetchAll(db)
+                // Print the description for every book in the table.
+                print("Here are all the books written by \(bookAuthor))")
+                for book in allBooksWithAuthor {
+                    print(book)
+                }
+            }
+            waitForUser()
+        } catch {
+            print(error)
+        }
+
     default:
         print("Error displaying data")
     }
@@ -345,7 +399,12 @@ func deleteData(tableChosen: String, dbQueue: DatabaseQueue) {
         guard let selectedBookId = readLine()
         else{print("Invalid ID."); return}
 
+        try dbQueue.write { db in
+            try selectedBookId.delete(db)
+        }
 
+// MARK: NEXT WORK
+// Do delete and also make sure rentbook remobves an avlaible copy.
     // DELETE CUSTOMER
     case menuButtons[10]:
         viewData(tableChosen: menuButtons[7], dbQueue: dbQueue)
@@ -539,7 +598,6 @@ func deleteData(tableChosen: String, dbQueue: DatabaseQueue) {
                 var inMainMenu = true
 
                 while inMainMenu == true {
-                    waitForUser()
                     clear()
                     print(
                         """
@@ -548,19 +606,23 @@ func deleteData(tableChosen: String, dbQueue: DatabaseQueue) {
                         \(menuButtons[0]). Rent a book
                         \(menuButtons[1]). Return a book
 
-                        \(menuButtons[2]). Create a new customer record done
+                        \(menuButtons[2]). Create a new customer record done 
                         \(menuButtons[3]). Create a new book record [FULLY DONE]
 
                         \(menuButtons[4]). Edit a customer
                         \(menuButtons[5]). View all customers done
 
-                        \(menuButtons[6]). View all books done
-                        \(menuButtons[7]). View avaliable books done
-                        \(menuButtons[8]). View unavaliable books done
+                        \(menuButtons[6]). View all books done [FULLY DONE]
+                        \(menuButtons[7]). View avaliable books done [FULLY DONE]
+                        \(menuButtons[8]). View unavaliable books done [FULLY DONE]
 
-                        \(menuButtons[9]). Delete a book record
-                        \(menuButtons[10]). Delete a customer record
-                        \(menuButtons[11]). Shut down system. done
+                        \(menuButtons[9]). Search for customer (By name) [ FULLY DONE]
+                        \(menuButtons[10]). Search for book by author [FULLY DONE]
+
+                        \(menuButtons[11]). Delete a book record
+                        \(menuButtons[12]). Delete a customer record
+
+                        \(menuButtons[13]). Shut down system. done
                         """)
                     let userInput = readLine()
 
@@ -603,15 +665,32 @@ func deleteData(tableChosen: String, dbQueue: DatabaseQueue) {
                     case menuButtons[8]:
                         viewData(tableChosen: menuButtons[8], dbQueue: dbQueue)
 
+                    // SEARCH CUSTOMER (By name)
+                    case menuButtons[9]:
+                        viewData(tableChosen: menuButtons[9], dbQueue: dbQueue)
+
+                    // SEARCH BOOK (By author)
+                    case menuButtons[10]:
+                        viewData(tableChosen: menuButtons[10], dbQueue: dbQueue)
+
                     // Shut down system.
-                    case menuButtons[11]:
+                    case menuButtons[13]:
                         clear()
-                        print("Thank you for using the OC Library admin panel.")
-                        print("System shutting down...")
+                        print("""
+                        Thank you for using the OC Library admin panel.
+
+                        System shutting down...
+                        See you later!
+                        """)
                         inMainMenu = false
                     default:
                         clear()
-                        print("Please select an operation by typing \n\(menuButtons)")
+                        
+                        print("""
+                        -----
+                        Please select an operation by typing one of the following integers:
+                        \(menuButtons)
+                        """)
                     }
 
                 }
