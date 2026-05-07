@@ -7,6 +7,8 @@
     import Foundation
     import GRDB
 
+    import PhoneNumberKit
+
     // MARK: - CONSTANTS
     // Constants
     let dbPath = "Sources/SwiftPlayground/library.db"
@@ -21,15 +23,6 @@
     let menuButtons =
         ["1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14" , "15"]
 
-    enum MenuOption: String {
-        case rentBook = "1"
-        case returnBook = "2"
-        case createCustomer = "3"
-        case createBook = "4"
-        case editCustomer = "5"
-        case editBook = "6"
-        case viewAllBooks
-    }
 
     /// These are used to differentiate between the different tables in easier to understand ways (With no magic String).
     /// 0 = books, 1 = customers, 2= rentedBooks
@@ -350,7 +343,7 @@
                 }
                 
                 // Ensures tables all filled correclty
-                if nameTyped.count > 0 && phoneTyped.count > 0 && nameTyped.count <= 20 && phoneTyped.count <= 5 &&
+                if nameTyped.count > 0 && phoneTyped.count >= 4 && nameTyped.count <= 20 && phoneTyped.count <= 15 &&
                 emailTyped.count <= 30{
                 // Attempt to read and display the data of the books table, ordered by id.
                 try dbQueue.write { db in
