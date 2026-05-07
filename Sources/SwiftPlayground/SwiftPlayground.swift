@@ -329,10 +329,11 @@ func writeData(tableChosen: String, dbQueue: DatabaseQueue) {
                 return
             }
 
+            // Verifies the customer's name is between 1-20 characters
             if nameTyped.count > 0 && nameTyped.count <= 20 {
                 validName = true
             } else {
-                print("Name must be between 0-20 Characters")
+                print("Name must be between 1-20 Characters")
                 waitForUser()
                 return
             }
@@ -345,6 +346,7 @@ func writeData(tableChosen: String, dbQueue: DatabaseQueue) {
 
             let phoneTypedHasNumber = phoneTyped.rangeOfCharacter(from: .decimalDigits) != nil
 
+            // Verify phone is between 4-15 characters long and includes a number (No just strings allowed)
             if phoneTyped.count >= 4 && phoneTyped.count <= 15 && phoneTypedHasNumber {
                 validPhone = true
             }else {
@@ -352,14 +354,15 @@ func writeData(tableChosen: String, dbQueue: DatabaseQueue) {
                 waitForUser()
                 return
             }
-            print("Customer Email (Required):")
+            print("Customer Email (Optional):")
             guard let emailTyped = readLine()
             else {
                 print("No email selected.")
                 return
             }
 
-            if emailTyped.count <= 30 {
+            // Validate if the email exists, It is optional - so if it does, verify it includes an @ symbol.
+            if emailTyped.count > 0 && emailTyped.count <= 30 {
                 if emailTyped.contains("@") {
                     validEmail = true
                 } else {
@@ -674,13 +677,6 @@ func updateData(tableChosen: String, dbQueue: DatabaseQueue) {
                 return
             }
 
-            print("Enter customer's email:")
-            guard let newCustomerEmail = readLine()
-            else {
-                print("Invalid value provided")
-                return
-            }
-
             print("Enter customer's phone:")
             guard let newCustomerPhone = readLine()
             else {
@@ -688,10 +684,21 @@ func updateData(tableChosen: String, dbQueue: DatabaseQueue) {
                 return
             }
 
+
+
+            print("Enter customer's email:")
+            guard let newCustomerEmail = readLine()
+            else {
+                print("Invalid value provided")
+                return
+            }
+
+            // Actually write the data to the database.
             try dbQueue.write { db in
                 let updatedCustomerDetails = Customer(
                     id: chosenCustomerIdInt, name: newCustomerName, phone: newCustomerPhone,
                     email: newCustomerEmail)
+                // Used save as it allows me to update multiple data points at once.
                 try updatedCustomerDetails.save(db)
             }
 
