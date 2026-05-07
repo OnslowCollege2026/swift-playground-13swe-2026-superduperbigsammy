@@ -213,7 +213,7 @@
                         }
 
                         // Attempt to read and display the data of the books table, ordered by title.
-                        try dbQueue.read { db in
+                        
                             let allBooksWithAuthor =
                                 try Book
                                 .filter(Book.Columns.author.like("%\(bookAuthor)%"))
@@ -224,15 +224,10 @@
                                 print(book)
                             }
                             if allBooksWithAuthor.isEmpty {
-                                print("There are currently no rented books.")
-                                return
+                                print("There are currently no books by this author.")
                             }
-                        }
-                        
-                    
                     default:
                         print("Error viewing Book table.")
-                        return
                     }
                         
                 } 
@@ -265,8 +260,7 @@
                             }
 
                             if allCustomersWithName.isEmpty {
-                                print("There are currently no rented books.")
-                                return
+                                print("There are currently no customers with this name.")
                             }
                         }
 
@@ -564,7 +558,8 @@
                 chosenCustomer = try Customer.fetchOne(db, key: customerId)
             }
             // Ensured the customer exists.
-            guard chosenCustomer != nil else {
+            guard chosenCustomer != nil
+            else {
                 print("This customer does not exist.")
                 return
             }
