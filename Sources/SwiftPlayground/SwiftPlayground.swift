@@ -349,7 +349,7 @@ func writeData(tableChosen: String, dbQueue: DatabaseQueue) {
             // Verify phone is between 4-15 characters long and includes a number (No just strings allowed)
             if phoneTyped.count >= 4 && phoneTyped.count <= 15 && phoneTypedHasNumber {
                 validPhone = true
-            }else {
+            } else {
                 print("Phone must be between 4-15 characters and include digits.")
                 waitForUser()
                 return
@@ -362,16 +362,20 @@ func writeData(tableChosen: String, dbQueue: DatabaseQueue) {
             }
 
             // Validate if the email exists, It is optional - so if it does, verify it includes an @ symbol.
-            if emailTyped.count > 0 && emailTyped.count <= 30 {
-                if emailTyped.contains("@") {
-                    validEmail = true
+            if emailTyped.count > 0 {
+                if emailTyped.count <= 30 {
+                    if emailTyped.contains("@") {
+                        validEmail = true
+                    } else {
+                        print("Email MUST include an @ symbol.")
+                        waitForUser()
+                        return
+                    }
                 } else {
-                    print("Email MUST include an @ symbol.")
+                    print("Email must be between 1 - 30 characters.")
+                    waitForUser()
+                    return
                 }
-            } else {
-                print("Email must be below 30 characters.")
-                waitForUser()
-                return
             }
 
             // Ensures tables all filled correclty
@@ -683,8 +687,6 @@ func updateData(tableChosen: String, dbQueue: DatabaseQueue) {
                 print("Invalid value provided")
                 return
             }
-
-
 
             print("Enter customer's email:")
             guard let newCustomerEmail = readLine()
