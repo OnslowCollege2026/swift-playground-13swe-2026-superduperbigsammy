@@ -7,8 +7,6 @@
     import Foundation
     import GRDB
 
-    import PhoneNumberKit
-
     // MARK: - CONSTANTS
     // Constants
     let dbPath = "Sources/SwiftPlayground/library.db"
