@@ -19,7 +19,7 @@ let header: String = """
 
 /// The buttons for the menus, used to make selections. Edit these for global change of menuButtons
 let menuButtons =
-    ["1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13","14"]
+    ["1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14"]
 
 // Structs
 
@@ -61,7 +61,9 @@ struct Customer: Identifiable, Codable, CustomStringConvertible, FetchableRecord
 
 // MARK: Book Struct
 /// A Book is an instance of a book that is inside the library.
-struct Books: Identifiable, Codable, FetchableRecord, PersistableRecord, MutablePersistableRecord, CustomStringConvertible {
+struct Books: Identifiable, Codable, FetchableRecord, PersistableRecord, MutablePersistableRecord,
+    CustomStringConvertible
+{
     static let dataBaseTableName = "Books"
 
     // A Book's unique identifier.
@@ -119,9 +121,9 @@ struct RentedBooks: Codable, FetchableRecord, PersistableRecord {
 }
 
 /// waitForUser()
-/// 
+///
 /// Waits for the user's confirmation (Return/Enter) before continuing. This is required to make sure user can see data.
-func waitForUser(){
+func waitForUser() {
     print("Press return to continue")
     _ = readLine()
 }
@@ -226,12 +228,12 @@ func viewData(tableChosen: String, dbQueue: DatabaseQueue) {
             print(error)
         }
 
-            // menuButtons 9 is for searching the customers by name.
+    // menuButtons 9 is for searching the customers by name.
     case menuButtons[9]:
         do {
             print("Please enter the customer name:")
             guard let customerName = readLine()
-            else{
+            else {
                 print("Invalid name given.")
                 return
             }
@@ -257,7 +259,7 @@ func viewData(tableChosen: String, dbQueue: DatabaseQueue) {
         do {
             print("Please enter the author's name:")
             guard let bookAuthor = readLine()
-            else{
+            else {
                 print("Invalid author given.")
                 return
             }
@@ -304,21 +306,21 @@ func writeData(tableChosen: String, dbQueue: DatabaseQueue) {
         do {
             print("Customer Name (Required):")
             guard let nameTyped = readLine()
-            else{
+            else {
                 print("Name is required.")
                 return
             }
 
             print("Valid Customer Phone (Required):")
             guard let phoneTyped = readLine()
-            else{
+            else {
                 print("Phone number is required")
                 return
             }
 
             print("Customer Email (Optional):")
             guard let emailTyped = readLine()
-            else{
+            else {
                 print("No email selected.")
                 return
             }
@@ -338,36 +340,37 @@ func writeData(tableChosen: String, dbQueue: DatabaseQueue) {
         do {
             print("New book title: (Required):")
             guard let titleTyped = readLine()
-            else{
+            else {
                 print("Title is required.")
                 return
             }
 
             print("New Book Author (Required):")
             guard let authorTyped = readLine()
-            else{
+            else {
                 print("Phone number is required")
                 return
             }
 
             print("Total copies in system:")
             guard let copiesTyped = readLine(),
-            let intCopiesTyped = Int(copiesTyped)
-            else{
+                let intCopiesTyped = Int(copiesTyped)
+            else {
                 print("Please enter a valid integer between 0-64")
                 return
             }
-            if intCopiesTyped > 0 && intCopiesTyped <= 99{
-            // Attempt to read and display the data of the books table, ordered by id.
-            try dbQueue.write { db in
-                let newBook = Books(
-                    id: nil, title: titleTyped, author: authorTyped, totalCopies: intCopiesTyped,
-                    avaliableCopies: intCopiesTyped)
-                try newBook.insert(db)
-                print("Data written sucessfully.\n\(newBook)")
-                waitForUser()
-            }
-            } else{
+            if intCopiesTyped > 0 && intCopiesTyped <= 99 {
+                // Attempt to read and display the data of the books table, ordered by id.
+                try dbQueue.write { db in
+                    let newBook = Books(
+                        id: nil, title: titleTyped, author: authorTyped,
+                        totalCopies: intCopiesTyped,
+                        avaliableCopies: intCopiesTyped)
+                    try newBook.insert(db)
+                    print("Data written sucessfully.\n\(newBook)")
+                    waitForUser()
+                }
+            } else {
                 print("Please enter a valid integer between 0-99 ")
             }
         } catch {
@@ -388,30 +391,77 @@ func writeData(tableChosen: String, dbQueue: DatabaseQueue) {
 /// Allows the removal of data from the database.
 func deleteData(tableChosen: String, dbQueue: DatabaseQueue) {
     clear()
+    do{
     print("\(header) DELETE DATA\n\nnil input to cancel operation.")
     // This switch uses the tableChosen to determine which table to delete
     switch tableChosen {
 
     // DELETE BOOK
     case menuButtons[9]:
+        // Display the books table
         viewData(tableChosen: menuButtons[6], dbQueue: dbQueue)
         print("Please select a book to delete (by ID):")
-        guard let selectedBookId = readLine()
-        else{print("Invalid ID."); return}
 
+        // Ask for inputted ID, If error, show error message.
+        guard let selectedBookIdInput = readLine(),
+            let selectedBookId = Int(selectedBookIdInput)
+        else {
+            print("Invalid ID.")
+            return
+        }
+        
+        // Find the book record from the table
         try dbQueue.write { db in
-            try selectedBookId.delete(db)
+            guard let selectedBook = try Books.fetchOne(db, key: selectedBookId)
+            else {
+                // If the book doesn't exist, show an error message.
+                print("A book with this ID doesn't exist.")
+                return
+            }
+
+            try selectedBook.delete(db)
+            print("Book has been deleted succesfully.")
+            waitForUser()
         }
 
-// MARK: NEXT WORK
-// Do delete and also make sure rentbook remobves an avlaible copy.
+    // MARK: NEXT WORK
+    // Do delete and also make sure rentbook remobves an avlaible copy.
+
     // DELETE CUSTOMER
     case menuButtons[10]:
-        viewData(tableChosen: menuButtons[7], dbQueue: dbQueue)
-        print("Please select a record to delete (by ID)")
+        // Display the customers table
+        // viewData(tableChosen: menuButtons[7], dbQueue: dbQueue)
+        
+        print("Please select a book to delete (by Name):")
+
+        // Ask for inputted ID, If error, show error message.
+        guard let selectedCustomerIdInput = readLine(),
+            let selectedCustomerId = Int(selectedCustomerIdInput)
+        else {
+            print("Invalid ID.")
+            return
+        }
+        
+        // Find the book record from the table
+        try dbQueue.write { db in
+            guard let selectedBook = try Customer.fetchOne(db, key: selectedCustomerId)
+            else {
+                // If the book doesn't exist, show an error message.
+                print("A customer with this ID doesn't exist.")
+                return
+            }
+
+            try selectedBook.delete(db)
+            print("Book has been deleted succesfully.")
+            waitForUser()
+        }
 
     default:
         print("Operation cancelled. (nil input)")
+    }
+
+    }catch{
+        print(error)
     }
 
     // MARK: rentBook()
@@ -439,16 +489,15 @@ func deleteData(tableChosen: String, dbQueue: DatabaseQueue) {
             // Check if the book exists and confirm.
             try dbQueue.read { db in
                 chosenBook = try Books.fetchOne(db, key: bookId)
-}
+            }
 
-                guard let book = chosenBook else{
-                    print("This book does not exist.")
-                    return
-                }
-                
-                print("You have selected \(book.title) by \(book.author)")
+            guard let book = chosenBook else {
+                print("This book does not exist.")
+                return
+            }
 
-            
+            print("You have selected \(book.title) by \(book.author)")
+
             viewData(tableChosen: menuButtons[5], dbQueue: dbQueue)
             print("Please type the name of the customer renting out the book.")
 
@@ -456,12 +505,12 @@ func deleteData(tableChosen: String, dbQueue: DatabaseQueue) {
 
             print("Enter customer ID:")
             guard let selectedCustomerID = readLine(),
-            let customerId = Int(selectedCustomerID)
+                let customerId = Int(selectedCustomerID)
             else {
                 print("Invalid ID.")
                 return
             }
-            
+
             var chosenCustomer: Customer?
             try dbQueue.read { db in
                 chosenCustomer = try Customer.fetchOne(db, key: customerId)
@@ -479,34 +528,36 @@ func deleteData(tableChosen: String, dbQueue: DatabaseQueue) {
             let dueDate = Calendar.current.date(byAdding: .day, value: 7, to: currentDate)!
 
             var validOrder = false
-            try dbQueue.write {db in
-            if ((chosenBook?.avaliableCopies) != nil){
-                validOrder = true
-            }
-            }
-            if validOrder == true{
             try dbQueue.write { db in
-                let newRentedBook = RentedBooks(
-                    bookId:  bookId, customerId: customerId, bookedDate: Date(),
-                    dueDate: dueDate)
-                print(newRentedBook)
-                try newRentedBook.insert(db)
-
-                chosenBook?.avaliableCopies = book.avaliableCopies - 1
-
-            print("""
-            Book rented sucessfully.
-
-            Your book is due on \(dueDate). a late fee will be issued if failure to return.
-            there are \(book.avaliableCopies - 1) left of this book.
-            """)
+                if (chosenBook?.avaliableCopies) != nil {
+                    validOrder = true
+                }
             }
-            } else{
-                print("""
-                Sorry. There are no avaliable copies left of \(book.title).
+            if validOrder == true {
+                try dbQueue.write { db in
+                    let newRentedBook = RentedBooks(
+                        bookId: bookId, customerId: customerId, bookedDate: Date(),
+                        dueDate: dueDate)
+                    print(newRentedBook)
+                    try newRentedBook.insert(db)
 
-                (\(book))
-                """)
+                    chosenBook?.avaliableCopies = book.avaliableCopies - 1
+
+                    print(
+                        """
+                        Book rented sucessfully.
+
+                        Your book is due on \(dueDate). a late fee will be issued if failure to return.
+                        there are \(book.avaliableCopies - 1) left of this book.
+                        """)
+                }
+            } else {
+                print(
+                    """
+                    Sorry. There are no avaliable copies left of \(book.title).
+
+                    (\(book))
+                    """)
             }
 
         } catch {
@@ -676,21 +727,23 @@ func deleteData(tableChosen: String, dbQueue: DatabaseQueue) {
                     // Shut down system.
                     case menuButtons[13]:
                         clear()
-                        print("""
-                        Thank you for using the OC Library admin panel.
+                        print(
+                            """
+                            Thank you for using the OC Library admin panel.
 
-                        System shutting down...
-                        See you later!
-                        """)
+                            System shutting down...
+                            See you later!
+                            """)
                         inMainMenu = false
                     default:
                         clear()
-                        
-                        print("""
-                        -----
-                        Please select an operation by typing one of the following integers:
-                        \(menuButtons)
-                        """)
+
+                        print(
+                            """
+                            -----
+                            Please select an operation by typing one of the following integers:
+                            \(menuButtons)
+                            """)
                     }
 
                 }
