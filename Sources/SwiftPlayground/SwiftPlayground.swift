@@ -31,13 +31,42 @@ let header: String = """
     """
 
 /// The buttons for the menus, used to make selections. Edit these for global change of menuButtons
-let menuButtons =
-    ["1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "15"]
+/// This enum lets us create a more maintainable main menu for futureproofing
+enum MenuOption: String, CaseIterable {
+    
+    case rentBook = "1"
+    case returnBook = "2"
+    
+    case createCustomer = "3"
+    case createBook = "4"
+    
+    case editCustomer = "5"
+    case editBook = "6"
+    case viewCustomers = "7"
+    
+    case viewBooks = "8"
+    case viewAvailableBooks = "9"
+    case viewRentedBooks = "10"
+    
+    case searchCustomerByName = "11"
+    case searchBookByAuthor = "12"
+    
+    case deleteBook = "13"
+    case deleteCustomer = "14"
+    
+    case shutdown = "15"
+}
 
 /// These are used to differentiate between the different tables in easier to understand ways (With no magic String).
 /// 0 = books, 1 = customers, 2= rentedBooks
 let tableSelection =
     ["books", "customers", "rentedbooks"]
+
+enum TableSelection: String, CaseIterable {
+    case books = "books"
+    case customers = "customers"
+    case rentedBooks = "rentedBooks"
+}
 
 // Structs
 
@@ -185,7 +214,7 @@ func viewData(tableChosen: String, dbQueue: DatabaseQueue, userInput: String?) {
     // This switch uses the tableCHosen to determine which table to display
     switch tableChosen {
     // BOOKS TABLE
-    case tableSelection[0]:
+    case TableSelection.books.rawValue:
         do {
             try dbQueue.read { db in
                 let allBooks = try Book.order(Book.Columns.id).fetchAll(db)
@@ -194,29 +223,21 @@ func viewData(tableChosen: String, dbQueue: DatabaseQueue, userInput: String?) {
                 switch userInput {
 
                 // View all books
-                case menuButtons[5]:
+                case MenuOption.viewBooks.rawValue:
                     for book in allBooks {
                         print(book.description)
                     }
 
                 // View available books
-                case menuButtons[6]:
+                case MenuOption.viewAvailableBooks.rawValue:
                     for book in allBooks {
                         if book.availableCopies > 0 {
                             print(book.description)
                         }
                     }
 
-                // View unavailable books
-                case menuButtons[7]:
-                    for book in allBooks {
-                        if book.availableCopies < 1 {
-                            print(book.description)
-                        }
-                    }
-
                 // SEARCH AUTHOR
-                case menuButtons[10]:
+                case MenuOption.searchBookByAuthor.rawValue:
 
                     print("Please enter the author's name:")
                     guard let bookAuthor = readLine()
@@ -250,11 +271,11 @@ func viewData(tableChosen: String, dbQueue: DatabaseQueue, userInput: String?) {
         }
 
     // CUSTOMERS TABLE
-    case tableSelection[1]:
+    case TableSelection.customers.rawValue:
         do {
             switch userInput {
             // SEARCH CUSTOMERS
-            case menuButtons[9]:
+            case MenuOption.searchCustomerByName.rawValue:
                 print("Please enter the customer name:")
                 guard let customerName = readLine()
                 else {
@@ -280,7 +301,7 @@ func viewData(tableChosen: String, dbQueue: DatabaseQueue, userInput: String?) {
                 }
 
             // PRINT ALL CUSTOMERS
-            case menuButtons[5]:
+            case MenuOption.viewCustomers.rawValue:
                 // Attempt to read and display the data of the customers table, ordered by name.
                 try dbQueue.read { db in
                     let allCustomers =
@@ -299,7 +320,7 @@ func viewData(tableChosen: String, dbQueue: DatabaseQueue, userInput: String?) {
         }
 
     // RENTEDBOOK TABLE
-    case tableSelection[2]:
+    case TableSelection.rentedBooks.rawValue:
     print("All currently rented books - ordered by Oldest - > Newest:")
         do {
             try dbQueue.read { db in
@@ -309,7 +330,7 @@ func viewData(tableChosen: String, dbQueue: DatabaseQueue, userInput: String?) {
                 switch userInput {
 
                 // View all rented books
-                case menuButtons[8]:
+                case MenuOption.viewRentedBooks.rawValue:
                     for book in allRentedBooks {
                         print(book.description)
                     }
@@ -343,7 +364,7 @@ func writeData(tableChosen: String, dbQueue: DatabaseQueue) {
     switch tableChosen {
 
     // Create a Customer instance and persist it to the database.
-    case menuButtons[2]:
+    case MenuOption.createCustomer.rawValue:
         do {
 
             var validName: Bool = false
@@ -358,7 +379,7 @@ func writeData(tableChosen: String, dbQueue: DatabaseQueue) {
             }
 
             // Verifies the customer's name is between 1-20 characters
-            if nameTyped.count > 0 && nameTyped.count <= 20 {
+            if !nameTyped.isEmpty && nameTyped.count <= 20 {
                 validName = true
             } else {
                 print("Name must be between 1-20 Characters")
@@ -390,7 +411,7 @@ func writeData(tableChosen: String, dbQueue: DatabaseQueue) {
             }
 
             // Validate if the email exists, It is optional - so if it does, verify it includes an @ symbol.
-            if emailTyped.count > 0 {
+            if !emailTyped.isEmpty {
                 if emailTyped.count <= 30 {
                     if emailTyped.contains("@") {
                         validEmail = true
@@ -400,14 +421,14 @@ func writeData(tableChosen: String, dbQueue: DatabaseQueue) {
                         return
                     }
                 } else {
-                    print("Email must be between 1 - 30 characters.")
+                    print("email must be between 1 - 30 characters.")
                     waitForUser()
                     return
                 }
             }
 
             // Ensures tables all filled correclty
-            if validName && validPhone && validEmail {
+            if validName && validPhone && (validEmail || emailTyped.isEmpty) {
                 // Attempt to read and display the data of the books table, ordered by id.
                 try dbQueue.write { db in
                     let newCustomer = Customer(
@@ -431,7 +452,7 @@ func writeData(tableChosen: String, dbQueue: DatabaseQueue) {
         }
 
     // Create a book instance and persist it to the database.
-    case menuButtons[3]:
+    case MenuOption.createBook.rawValue:
         do {
             print("New book title: (Required):")
             guard let titleTyped = readLine()
@@ -499,9 +520,9 @@ func deleteData(tableChosen: String, dbQueue: DatabaseQueue) {
         switch tableChosen {
 
         // DELETE BOOK
-        case menuButtons[11]:
+        case MenuOption.deleteBook.rawValue:
             // Display the books table
-            viewData(tableChosen: tableSelection[0], dbQueue: dbQueue, userInput: menuButtons[6])
+            viewData(tableChosen: tableSelection[0], dbQueue: dbQueue, userInput: MenuOption.viewBooks.rawValue)
             print("Please select a book to delete (by ID):")
 
             // Ask for inputted ID, If error, show error message.
@@ -526,9 +547,9 @@ func deleteData(tableChosen: String, dbQueue: DatabaseQueue) {
             }
 
         // DELETE CUSTOMER
-        case menuButtons[12]:
+        case MenuOption.deleteCustomer.rawValue:
             // Display the customers table
-            viewData(tableChosen: tableSelection[1], dbQueue: dbQueue, userInput: menuButtons[5])
+            viewData(tableChosen: tableSelection[1], dbQueue: dbQueue, userInput: MenuOption.viewCustomers.rawValue)
 
             print("Please select a customer to delete (by ID):")
 
@@ -574,7 +595,7 @@ func rentBook(dbQueue: DatabaseQueue) {
 
     print("Here are all the books currently available in the library.")
     // Displays all the books.
-    viewData(tableChosen: tableSelection[0], dbQueue: dbQueue, userInput: menuButtons[6])
+    viewData(tableChosen: tableSelection[0], dbQueue: dbQueue, userInput: MenuOption.viewBooks.rawValue)
 
     print("Please type the ID number of the book you wish to rent.")
     guard let selectedBookId = readLine(),
@@ -598,7 +619,7 @@ func rentBook(dbQueue: DatabaseQueue) {
 
         print("You have selected \(book.title) by \(book.author)")
 
-        viewData(tableChosen: tableSelection[1], dbQueue: dbQueue, userInput: menuButtons[5])
+        viewData(tableChosen: tableSelection[1], dbQueue: dbQueue, userInput: MenuOption.viewCustomers.rawValue)
         print("Please type the name of the customer renting out the book.")
 
         // the name of the customer renting the book.
@@ -688,10 +709,10 @@ func updateData(tableChosen: String, dbQueue: DatabaseQueue) {
         switch tableChosen {
 
         // UPDATE CUSTOMER RECORD
-        case menuButtons[4]:
+        case MenuOption.editCustomer.rawValue:
 
             // View the customers table
-            viewData(tableChosen: tableSelection[1], dbQueue: dbQueue, userInput: menuButtons[5])
+            viewData(tableChosen: tableSelection[1], dbQueue: dbQueue, userInput: MenuOption.viewCustomers.rawValue)
             print("Select the ID of the customer you wish to update.")
 
             guard let chosenCustomerId = readLine(),
@@ -733,10 +754,10 @@ func updateData(tableChosen: String, dbQueue: DatabaseQueue) {
             }
 
         // UPDATE BOOK RECORD
-        case menuButtons[5]:
+        case MenuOption.editBook.rawValue:
 
             // View the books table
-            viewData(tableChosen: tableSelection[0], dbQueue: dbQueue, userInput: menuButtons[6])
+            viewData(tableChosen: tableSelection[0], dbQueue: dbQueue, userInput: MenuOption.viewBooks.rawValue)
             print("Select the ID of the book you wish to update.")
 
             guard let chosenBookId = readLine(),
@@ -868,6 +889,7 @@ func returnBook(dbQueue: DatabaseQueue) {
 struct SwiftPlayground {
     // MARK: main()
     static func main() {
+        
         let formatter = DateFormatter()
         formatter.timeZone = TimeZone(identifier: "Pacific/Auckland")
         formatter.dateStyle = .full
@@ -886,91 +908,105 @@ struct SwiftPlayground {
                 }
             } catch { print(error) }
 
+            // Clear the terminal of the database schema, Comment this out for debugging.
+            clear()
+
             // MARK: inMainMenu
             // Holds the program inside the main menu screen when not displaying a function.
             var inMainMenu = true
 
             while inMainMenu == true {
-                clear()
+                
                 print(
                     """
                     \(header) MAIN MENU
                     Welcome to the Onslow College Library admin panel. Please select an operation using you numberpad.
-                    📖 \(menuButtons[0]). Rent a book
-                    📖 \(menuButtons[1]). Return a book
+                    📖 \(MenuOption.rentBook.rawValue). Rent a book
+                    📖 \(MenuOption.returnBook.rawValue). Return a book
 
-                    👥 \(menuButtons[2]). Create a new customer record
-                    📖 \(menuButtons[3]). Create a new book record
+                    👥 \(MenuOption.createCustomer.rawValue). Create a new customer record
+                    📖 \(MenuOption.createBook.rawValue). Create a new book record
 
-                    👥 \(menuButtons[4]). Edit a customer
-                    📖 \(menuButtons[14]). Edit a book
-                    👥 \(menuButtons[5]). View all customers
+                    👥 \(MenuOption.editCustomer.rawValue). Edit a customer
+                    📖 \(MenuOption.editBook.rawValue). Edit a book
+                    👥 \(MenuOption.viewCustomers.rawValue). View all customers
 
-                    📖 \(menuButtons[6]). View all books
-                    📖 \(menuButtons[7]). View available books
-                    📖 \(menuButtons[8]). View unavailable books
+                    📖 \(MenuOption.viewBooks.rawValue). View all books
+                    📖 \(MenuOption.viewAvailableBooks.rawValue). View avaliable books
+                    📖 \(MenuOption.viewRentedBooks.rawValue). View all currently rented out books
 
-                    👥 \(menuButtons[9]). Search for customer (By name)
-                    📖 \(menuButtons[10]). Search for book by author
+                    👥 \(MenuOption.searchCustomerByName.rawValue). Search for customer by name
+                    📖 \(MenuOption.searchBookByAuthor.rawValue). Search for book by author
 
-                    📖 \(menuButtons[11]). Delete a book record
-                    👥 \(menuButtons[12]). Delete a customer record
+                    📖 \(MenuOption.deleteBook.rawValue). Delete a book record
+                    👥 \(MenuOption.deleteCustomer.rawValue). Delete a customer record
 
-                    ⚠️  \(menuButtons[13]). Shut down system ⚠️
+                    ⚠️  \(MenuOption.shutdown.rawValue). Shut down system  ⚠️
                     """)
-                let userInput = readLine()
+                guard let userInput = readLine(),
+                let option = MenuOption(rawValue: userInput) else {
+                    clear()
+                        print(
+                        """
+                        -----
+                        Please select an operation by typing a valid integer.
+                        """)
+                        continue
+                }
 
                 // MARK: userInput Switch
                 // Filters the user's input using the menuButtons as shown before.
-                switch userInput {
+                switch option {
                 // RENT BOOK
-                case menuButtons[0]:
+                case .rentBook:
                     rentBook(dbQueue: dbQueue)
 
                 // RETURN BOOK
-                case menuButtons[1]:
+                case .returnBook:
                     returnBook(dbQueue: dbQueue)
 
                 // WRITE NEW CUSTOMER
-                case menuButtons[2]:
-                    writeData(tableChosen: menuButtons[2], dbQueue: dbQueue)
+                case .createCustomer:
+                    writeData(tableChosen: MenuOption.createCustomer.rawValue, dbQueue: dbQueue)
 
                 // WRITE NEW BOOK
-                case menuButtons[3]:
-                    writeData(tableChosen: menuButtons[3], dbQueue: dbQueue)
+                case .createBook:
+                    writeData(tableChosen: MenuOption.createBook.rawValue, dbQueue: dbQueue)
 
                 // EDIT CUSTOMER
-                case menuButtons[4]:
-                    updateData(tableChosen: menuButtons[4], dbQueue: dbQueue)
+                case .editCustomer:
+                    updateData(tableChosen: MenuOption.editCustomer.rawValue, dbQueue: dbQueue)
 
                 // EDIT BOOK
-                case menuButtons[14]:
-                    updateData(tableChosen: menuButtons[5], dbQueue: dbQueue)
+                case .editBook:
+                    updateData(tableChosen: MenuOption.editBook.rawValue, dbQueue: dbQueue)
 
-                // VIEW CUSTOMERS (all)
-                case menuButtons[5], menuButtons[9]:
-                    viewData(tableChosen: tableSelection[1], dbQueue: dbQueue, userInput: userInput)
+                // VIEW CUSTOMERS (all, and search)
+                case .viewCustomers, .searchCustomerByName:
+                    viewData(tableChosen: TableSelection.customers.rawValue, dbQueue: dbQueue, userInput: userInput)
+                    waitForUser()
 
-                // VIEW BOOKS
-                case menuButtons[6], menuButtons[7], menuButtons[10]:
-                    viewData(tableChosen: tableSelection[0], dbQueue: dbQueue, userInput: userInput)
+                // VIEW BOOKS - All, Avaliable, and Search
+                case .viewBooks, .viewAvailableBooks, .searchBookByAuthor:
+                    viewData(tableChosen: TableSelection.books.rawValue, dbQueue: dbQueue, userInput: userInput)
+                    waitForUser()
                 
                 // VIEW RENTEDBOOKS
-                case menuButtons[8]:
-                    viewData(tableChosen: tableSelection[2], dbQueue: dbQueue, userInput: userInput)
+                case .viewRentedBooks:
+                    viewData(tableChosen: TableSelection.rentedBooks.rawValue, dbQueue: dbQueue, userInput: userInput)
                     // Wiats here in case of future upgrades, can display table without waiting.
                     waitForUser()
 
                 // DELETE BOOK
-                case menuButtons[11]:
-                    deleteData(tableChosen: menuButtons[11], dbQueue: dbQueue)
+                case .deleteBook:
+                    deleteData(tableChosen: MenuOption.deleteBook.rawValue, dbQueue: dbQueue)
 
                 // DELETE AUTHOR
-                case menuButtons[12]:
-                    deleteData(tableChosen: menuButtons[12], dbQueue: dbQueue)
+                case .deleteCustomer:
+                    deleteData(tableChosen: MenuOption.deleteCustomer.rawValue, dbQueue: dbQueue)
 
                 // Shut down system.
-                case menuButtons[13]:
+                case .shutdown:
                     clear()
                     print(
                         """
@@ -986,8 +1022,7 @@ struct SwiftPlayground {
                     print(
                         """
                         -----
-                        Please select an operation by typing one of the following integers:
-                        \(menuButtons)
+                        Please select an operation by typing a valid integer.
                         """)
                 }
 
