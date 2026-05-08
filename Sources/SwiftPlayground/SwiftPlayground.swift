@@ -15,10 +15,19 @@ import GRDB
 // Constants
 let dbPath = "Sources/SwiftPlayground/library.db"
 
+let formatter: DateFormatter = {
+    let formatter = DateFormatter()
+    formatter.timeZone = TimeZone(identifier: "Pacific/Auckland")
+    formatter.dateFormat = "yyyy-dd-MM HH:mm:ss zzz"
+    return formatter
+}()
+
+let date = formatter.string(from: Date())
+
 // This header goes at the top of each menu page.
 let header: String = """
     ----------------------------------------------
-    \(Date()) - ONSLOW COLLEGE LIBRARY - ADMIN PANEL -
+    \(date) - ONSLOW COLLEGE LIBRARY - ADMIN PANEL -
     """
 
 /// The buttons for the menus, used to make selections. Edit these for global change of menuButtons
@@ -129,9 +138,17 @@ struct RentedBooks: Codable, FetchableRecord, PersistableRecord, CustomStringCon
         case bookedDate = "BookedDate"
         case dueDate = "DueDate"
     }
+
+    enum Columns {
+        static let bookId = Column("BookId")
+        static let customerId = Column("CustomerId")
+        static let bookedDate = Column("BookedDate")
+        static let dueDate = Column("DueDate")
+    }
+
     var description: String {
         return """
-            book #\(bookId), was rented by customer #\(customerId) on \(bookedDate). The book is due on \(dueDate).
+            book #\(bookId), was rented by customer #\(customerId) on \(formatter.string(from:bookedDate)). The book is due on \(formatter.string(from: dueDate)).
             """
     }
 }
@@ -222,6 +239,7 @@ func viewData(tableChosen: String, dbQueue: DatabaseQueue, userInput: String?) {
                     if allBooksWithAuthor.isEmpty {
                         print("There are currently no books by this author.")
                     }
+                    waitForUser()
                 default:
                     print("Error viewing Book table.")
                 }
@@ -258,6 +276,7 @@ func viewData(tableChosen: String, dbQueue: DatabaseQueue, userInput: String?) {
                     if allCustomersWithName.isEmpty {
                         print("There are currently no customers with this name.")
                     }
+                    waitForUser()
                 }
 
             // PRINT ALL CUSTOMERS
@@ -281,20 +300,25 @@ func viewData(tableChosen: String, dbQueue: DatabaseQueue, userInput: String?) {
 
     // RENTEDBOOK TABLE
     case tableSelection[2]:
+    print("All currently rented books - ordered by Oldest - > Newest:")
         do {
-            // Show currently rented books
             try dbQueue.read { db in
-                let rentedBooks = try RentedBooks.fetchAll(db)
+                let allRentedBooks = try RentedBooks.order(RentedBooks.Columns.bookedDate).fetchAll(db)
 
-                if rentedBooks.isEmpty {
-                    print("There are currently no rented books.")
-                    return
+                // Print the description for every book in the table.
+                switch userInput {
+
+                // View all rented books
+                case menuButtons[8]:
+                    for book in allRentedBooks {
+                        print(book.description)
+                    }
+
+                default:
+                print("Unsucsesful viewing of table RentedBooks.")
+
                 }
-
-                for rentedBook in rentedBooks {
-                    print(rentedBook)
-                }
-
+                
             }
         } catch { print(error) }
 
@@ -601,11 +625,11 @@ func rentBook(dbQueue: DatabaseQueue) {
             return
         }
 
-        // currentDate is used to create the date of the booking for the book.
+        // currentDate is used to create the date of the booking for the book. Is a date object, not a string.
         let currentDate = Date()
 
         // dueDate calculates a week from the currentDate, which is when the book is due.
-        guard let dueDate = Calendar.current.date(byAdding: .day, value: 7, to: currentDate)
+                guard let dueDate = Calendar.current.date(byAdding: .day, value: 7, to: currentDate)
         else {
             return
         }
@@ -621,7 +645,7 @@ func rentBook(dbQueue: DatabaseQueue) {
         if validOrder == true {
             try dbQueue.write { db in
                 let newRentedBook = RentedBooks(
-                    bookId: bookId, customerId: customerId, bookedDate: Date(),
+                    bookId: bookId, customerId: customerId, bookedDate: currentDate,
                     dueDate: dueDate)
                 print(newRentedBook)
 
@@ -632,7 +656,7 @@ func rentBook(dbQueue: DatabaseQueue) {
                     """
                     Book rented sucessfully.
 
-                    Your book is due on \(dueDate). a late fee will be issued if failure to return.
+                    Your book is due on \(formatter.string(from: dueDate)). a late fee will be issued if failure to return.
                     there are \(book.availableCopies) left of this book.
                     """)
             }
@@ -844,6 +868,10 @@ func returnBook(dbQueue: DatabaseQueue) {
 struct SwiftPlayground {
     // MARK: main()
     static func main() {
+        let formatter = DateFormatter()
+        formatter.timeZone = TimeZone(identifier: "Pacific/Auckland")
+        formatter.dateStyle = .full
+        formatter.timeStyle = .medium
         do {
 
             // Stores the database queue, which is where the list of operations go.
@@ -856,7 +884,7 @@ struct SwiftPlayground {
                     let schema = try db.dumpSchema()
                     print(schema)
                 }
-            }
+            } catch { print(error) }
 
             // MARK: inMainMenu
             // Holds the program inside the main menu screen when not displaying a function.
@@ -924,8 +952,14 @@ struct SwiftPlayground {
                     viewData(tableChosen: tableSelection[1], dbQueue: dbQueue, userInput: userInput)
 
                 // VIEW BOOKS
-                case menuButtons[6], menuButtons[7], menuButtons[8], menuButtons[10]:
+                case menuButtons[6], menuButtons[7], menuButtons[10]:
                     viewData(tableChosen: tableSelection[0], dbQueue: dbQueue, userInput: userInput)
+                
+                // VIEW RENTEDBOOKS
+                case menuButtons[8]:
+                    viewData(tableChosen: tableSelection[2], dbQueue: dbQueue, userInput: userInput)
+                    // Wiats here in case of future upgrades, can display table without waiting.
+                    waitForUser()
 
                 // DELETE BOOK
                 case menuButtons[11]:
