@@ -4,6 +4,10 @@
 // Created on 4-22-2026
 // Created by Sam Harford
 
+// Program overview
+// OC LIbrary admin panel
+// Be able
+
 import Foundation
 import GRDB
 
