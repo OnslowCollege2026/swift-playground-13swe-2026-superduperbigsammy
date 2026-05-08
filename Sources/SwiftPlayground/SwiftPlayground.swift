@@ -5,24 +5,27 @@
 // Created by Sam Harford
 
 // Program overview
-// OC LIbrary admin panel
-// Be able
+// OC Library admin panel
+// Be able to view, edit, and manage data inside a database.
 
 import Foundation
 import GRDB
 
 // MARK: - CONSTANTS
 // Constants
+
+// This is the path the database is located at
 let dbPath = "Sources/SwiftPlayground/library.db"
 
-let formatter: DateFormatter = {
-    let formatter = DateFormatter()
-    formatter.timeZone = TimeZone(identifier: "Pacific/Auckland")
-    formatter.dateFormat = "yyyy-dd-MM HH:mm:ss zzz"
-    return formatter
+// dateFormatter. lets us view the time in NZST
+let dateFormatter: DateFormatter = {
+    let dateFormatter = DateFormatter()
+    dateFormatter.timeZone = TimeZone(identifier: "Pacific/Auckland")
+    dateFormatter.dateFormat = "yyyy-dd-MM HH:mm:ss zzz"
+    return dateFormatter
 }()
 
-let date = formatter.string(from: Date())
+let date = dateFormatter.string(from: Date())
 
 // This header goes at the top of each menu page.
 let header: String = """
@@ -30,30 +33,30 @@ let header: String = """
     \(date) - ONSLOW COLLEGE LIBRARY - ADMIN PANEL -
     """
 
-/// The buttons for the menus, used to make selections. Edit these for global change of menuButtons
-/// This enum lets us create a more maintainable main menu for futureproofing
+/// The buttons for the menus, used to make selections. Edit these to change the menu and all selections.
+/// This enum let us create a more maintainable main menu for futureproofing-Edit a number and it doesnt break the code
 enum MenuOption: String, CaseIterable {
-    
+
     case rentBook = "1"
     case returnBook = "2"
-    
+
     case createCustomer = "3"
     case createBook = "4"
-    
+
     case editCustomer = "5"
     case editBook = "6"
     case viewCustomers = "7"
-    
+
     case viewBooks = "8"
     case viewAvailableBooks = "9"
     case viewRentedBooks = "10"
-    
+
     case searchCustomerByName = "11"
     case searchBookByAuthor = "12"
-    
+
     case deleteBook = "13"
     case deleteCustomer = "14"
-    
+
     case shutdown = "15"
 }
 
@@ -177,7 +180,7 @@ struct RentedBooks: Codable, FetchableRecord, PersistableRecord, CustomStringCon
 
     var description: String {
         return """
-            book #\(bookId), was rented by customer #\(customerId) on \(formatter.string(from:bookedDate)). The book is due on \(formatter.string(from: dueDate)).
+            book #\(bookId), was rented by customer #\(customerId) on \(dateFormatter.string(from:bookedDate)). The book is due on \(dateFormatter.string(from: dueDate)).
             """
     }
 }
@@ -202,11 +205,9 @@ func clear() {
 /// viewData()
 ///
 /// - Parameters:
-///     - tableChosen: The table that is supposed to be displayed.
-///         - tableChosen = menuButtons[0]: The Book table
-///         - tableChosen = menuButtons[1]: the Customers table
+///     - TableChosen: The table that is supposed to be displayed.
 ///     - dbQueue: The database queue for the database
-///     - userInput: The selection the user made.
+///     - userInput: The selection the user made from the main menu (optional)
 ///
 /// viewData() is used to display tables from the dbPath
 func viewData(tableChosen: String, dbQueue: DatabaseQueue, userInput: String?) {
@@ -321,10 +322,11 @@ func viewData(tableChosen: String, dbQueue: DatabaseQueue, userInput: String?) {
 
     // RENTEDBOOK TABLE
     case TableSelection.rentedBooks.rawValue:
-    print("All currently rented books - ordered by Oldest - > Newest:")
+        print("All currently rented books - ordered by Oldest - > Newest:")
         do {
             try dbQueue.read { db in
-                let allRentedBooks = try RentedBooks.order(RentedBooks.Columns.bookedDate).fetchAll(db)
+                let allRentedBooks = try RentedBooks.order(RentedBooks.Columns.bookedDate).fetchAll(
+                    db)
 
                 // Print the description for every book in the table.
                 switch userInput {
@@ -336,10 +338,10 @@ func viewData(tableChosen: String, dbQueue: DatabaseQueue, userInput: String?) {
                     }
 
                 default:
-                print("Unsucsesful viewing of table RentedBooks.")
+                    print("Unsucsesful viewing of table RentedBooks.")
 
                 }
-                
+
             }
         } catch { print(error) }
 
@@ -522,7 +524,9 @@ func deleteData(tableChosen: String, dbQueue: DatabaseQueue) {
         // DELETE BOOK
         case MenuOption.deleteBook.rawValue:
             // Display the books table
-            viewData(tableChosen: tableSelection[0], dbQueue: dbQueue, userInput: MenuOption.viewBooks.rawValue)
+            viewData(
+                tableChosen: tableSelection[0], dbQueue: dbQueue,
+                userInput: MenuOption.viewBooks.rawValue)
             print("Please select a book to delete (by ID):")
 
             // Ask for inputted ID, If error, show error message.
@@ -549,7 +553,9 @@ func deleteData(tableChosen: String, dbQueue: DatabaseQueue) {
         // DELETE CUSTOMER
         case MenuOption.deleteCustomer.rawValue:
             // Display the customers table
-            viewData(tableChosen: tableSelection[1], dbQueue: dbQueue, userInput: MenuOption.viewCustomers.rawValue)
+            viewData(
+                tableChosen: tableSelection[1], dbQueue: dbQueue,
+                userInput: MenuOption.viewCustomers.rawValue)
 
             print("Please select a customer to delete (by ID):")
 
@@ -595,7 +601,8 @@ func rentBook(dbQueue: DatabaseQueue) {
 
     print("Here are all the books currently available in the library.")
     // Displays all the books.
-    viewData(tableChosen: tableSelection[0], dbQueue: dbQueue, userInput: MenuOption.viewBooks.rawValue)
+    viewData(
+        tableChosen: tableSelection[0], dbQueue: dbQueue, userInput: MenuOption.viewBooks.rawValue)
 
     print("Please type the ID number of the book you wish to rent.")
     guard let selectedBookId = readLine(),
@@ -619,7 +626,9 @@ func rentBook(dbQueue: DatabaseQueue) {
 
         print("You have selected \(book.title) by \(book.author)")
 
-        viewData(tableChosen: tableSelection[1], dbQueue: dbQueue, userInput: MenuOption.viewCustomers.rawValue)
+        viewData(
+            tableChosen: tableSelection[1], dbQueue: dbQueue,
+            userInput: MenuOption.viewCustomers.rawValue)
         print("Please type the name of the customer renting out the book.")
 
         // the name of the customer renting the book.
@@ -650,7 +659,7 @@ func rentBook(dbQueue: DatabaseQueue) {
         let currentDate = Date()
 
         // dueDate calculates a week from the currentDate, which is when the book is due.
-                guard let dueDate = Calendar.current.date(byAdding: .day, value: 7, to: currentDate)
+        guard let dueDate = Calendar.current.date(byAdding: .day, value: 7, to: currentDate)
         else {
             return
         }
@@ -677,7 +686,7 @@ func rentBook(dbQueue: DatabaseQueue) {
                     """
                     Book rented sucessfully.
 
-                    Your book is due on \(formatter.string(from: dueDate)). a late fee will be issued if failure to return.
+                    Your book is due on \(dateFormatter.string(from: dueDate)). a late fee will be issued if failure to return.
                     there are \(book.availableCopies) left of this book.
                     """)
             }
@@ -712,7 +721,9 @@ func updateData(tableChosen: String, dbQueue: DatabaseQueue) {
         case MenuOption.editCustomer.rawValue:
 
             // View the customers table
-            viewData(tableChosen: tableSelection[1], dbQueue: dbQueue, userInput: MenuOption.viewCustomers.rawValue)
+            viewData(
+                tableChosen: tableSelection[1], dbQueue: dbQueue,
+                userInput: MenuOption.viewCustomers.rawValue)
             print("Select the ID of the customer you wish to update.")
 
             guard let chosenCustomerId = readLine(),
@@ -757,7 +768,9 @@ func updateData(tableChosen: String, dbQueue: DatabaseQueue) {
         case MenuOption.editBook.rawValue:
 
             // View the books table
-            viewData(tableChosen: tableSelection[0], dbQueue: dbQueue, userInput: MenuOption.viewBooks.rawValue)
+            viewData(
+                tableChosen: tableSelection[0], dbQueue: dbQueue,
+                userInput: MenuOption.viewBooks.rawValue)
             print("Select the ID of the book you wish to update.")
 
             guard let chosenBookId = readLine(),
@@ -889,11 +902,11 @@ func returnBook(dbQueue: DatabaseQueue) {
 struct SwiftPlayground {
     // MARK: main()
     static func main() {
-        
-        let formatter = DateFormatter()
-        formatter.timeZone = TimeZone(identifier: "Pacific/Auckland")
-        formatter.dateStyle = .full
-        formatter.timeStyle = .medium
+
+        let dateFormatter = DateFormatter()
+        dateFormatter.timeZone = TimeZone(identifier: "Pacific/Auckland")
+        dateFormatter.dateStyle = .full
+        dateFormatter.timeStyle = .medium
         do {
 
             // Stores the database queue, which is where the list of operations go.
@@ -916,7 +929,7 @@ struct SwiftPlayground {
             var inMainMenu = true
 
             while inMainMenu == true {
-                
+
                 print(
                     """
                     \(header) MAIN MENU
@@ -943,19 +956,24 @@ struct SwiftPlayground {
 
                     ⚠️  \(MenuOption.shutdown.rawValue). Shut down system  ⚠️
                     """)
+
+                // checks user input with MenuOption
+                // If it fails, send error message and request for new userInput
                 guard let userInput = readLine(),
-                let option = MenuOption(rawValue: userInput) else {
+                // returns nil is menuOption doesnt exist.
+                    let option = MenuOption(rawValue: userInput)
+                else {
                     clear()
-                        print(
+                    print(
                         """
                         -----
                         Please select an operation by typing a valid integer.
                         """)
-                        continue
+                    continue
                 }
 
                 // MARK: userInput Switch
-                // Filters the user's input using the menuButtons as shown before.
+                // Filters the user's input using the menunButtons as shown before.
                 switch option {
                 // RENT BOOK
                 case .rentBook:
@@ -983,17 +1001,23 @@ struct SwiftPlayground {
 
                 // VIEW CUSTOMERS (all, and search)
                 case .viewCustomers, .searchCustomerByName:
-                    viewData(tableChosen: TableSelection.customers.rawValue, dbQueue: dbQueue, userInput: userInput)
+                    viewData(
+                        tableChosen: TableSelection.customers.rawValue, dbQueue: dbQueue,
+                        userInput: userInput)
                     waitForUser()
 
                 // VIEW BOOKS - All, Avaliable, and Search
                 case .viewBooks, .viewAvailableBooks, .searchBookByAuthor:
-                    viewData(tableChosen: TableSelection.books.rawValue, dbQueue: dbQueue, userInput: userInput)
+                    viewData(
+                        tableChosen: TableSelection.books.rawValue, dbQueue: dbQueue,
+                        userInput: userInput)
                     waitForUser()
-                
+
                 // VIEW RENTEDBOOKS
                 case .viewRentedBooks:
-                    viewData(tableChosen: TableSelection.rentedBooks.rawValue, dbQueue: dbQueue, userInput: userInput)
+                    viewData(
+                        tableChosen: TableSelection.rentedBooks.rawValue, dbQueue: dbQueue,
+                        userInput: userInput)
                     // Wiats here in case of future upgrades, can display table without waiting.
                     waitForUser()
 
