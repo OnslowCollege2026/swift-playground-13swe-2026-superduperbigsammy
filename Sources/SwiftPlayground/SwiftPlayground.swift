@@ -4,6 +4,7 @@
 // Created on 4-22-2026
 // Created by Sam Harford
 
+// A submission for standards AS91906 and AS91902
 // Program overview
 // OC Library admin panel
 // Be able to view, edit, and manage data inside a database.
@@ -540,7 +541,7 @@ func deleteData(tableChosen: String, dbQueue: DatabaseQueue) {
         case MenuOption.deleteBook.rawValue:
             // Display the books table
             viewData(
-                tableChosen: tableSelection[0], dbQueue: dbQueue,
+                tableChosen: TableSelection.books.rawValue, dbQueue: dbQueue,
                 userInput: MenuOption.viewBooks.rawValue)
             print("Please select a book to delete (by ID):")
 
@@ -569,7 +570,7 @@ func deleteData(tableChosen: String, dbQueue: DatabaseQueue) {
         case MenuOption.deleteCustomer.rawValue:
             // Display the customers table
             viewData(
-                tableChosen: tableSelection[1], dbQueue: dbQueue,
+                tableChosen: TableSelection.customers.rawValue, dbQueue: dbQueue,
                 userInput: MenuOption.viewCustomers.rawValue)
 
             print("Please select a customer to delete (by ID):")
@@ -617,7 +618,7 @@ func rentBook(dbQueue: DatabaseQueue) {
     print("Here are all the books currently available in the library.")
     // Displays all the books.
     viewData(
-        tableChosen: tableSelection[0], dbQueue: dbQueue, userInput: MenuOption.viewBooks.rawValue)
+        tableChosen: TableSelection.books.rawValue, dbQueue: dbQueue, userInput: MenuOption.viewBooks.rawValue)
 
     print("Please type the ID number of the book you wish to rent.")
     guard let selectedBookId = readLine(),
@@ -642,7 +643,7 @@ func rentBook(dbQueue: DatabaseQueue) {
         print("You have selected \(book.title) by \(book.author)")
 
         viewData(
-            tableChosen: tableSelection[1], dbQueue: dbQueue,
+            tableChosen: TableSelection.customers.rawValue, dbQueue: dbQueue,
             userInput: MenuOption.viewCustomers.rawValue)
         print("Please type the name of the customer renting out the book.")
 
@@ -737,7 +738,7 @@ func updateData(tableChosen: String, dbQueue: DatabaseQueue) {
 
             // View the customers table
             viewData(
-                tableChosen: tableSelection[1], dbQueue: dbQueue,
+                tableChosen: TableSelection.customers.rawValue, dbQueue: dbQueue,
                 userInput: MenuOption.viewCustomers.rawValue)
             print("Select the ID of the customer you wish to update.")
 
@@ -784,7 +785,7 @@ func updateData(tableChosen: String, dbQueue: DatabaseQueue) {
 
             // View the books table
             viewData(
-                tableChosen: tableSelection[0], dbQueue: dbQueue,
+                tableChosen: TableSelection.books.rawValue, dbQueue: dbQueue,
                 userInput: MenuOption.viewBooks.rawValue)
             print("Select the ID of the book you wish to update.")
 
@@ -1060,7 +1061,7 @@ struct SwiftPlayground {
                         Thank you for using the OC Library admin panel. We hope to see you soon.
 
                         Admin Panel was shut down sucessfully.
-                        
+
                         """)
                     inMainMenu = false
                 default:
