@@ -21,7 +21,7 @@ let dbPath = "Sources/SwiftPlayground/library.db"
 let dateFormatter: DateFormatter = {
     let dateFormatter = DateFormatter()
     dateFormatter.timeZone = TimeZone(identifier: "Pacific/Auckland")
-    dateFormatter.dateFormat = "yyyy-dd-MM HH:mm:ss zzz"
+    dateFormatter.dateFormat = "yyyy-dd-MM"
     return dateFormatter
 }()
 
@@ -63,7 +63,7 @@ enum MenuOption: String, CaseIterable {
 /// These are used to differentiate between the different tables in easier to understand ways (With no magic String).
 /// 0 = books, 1 = customers, 2= rentedBooks
 let tableSelection =
-    ["books", "customers", "rentedbooks"]
+    ["books", "customers", "rentedBooks"]
 
 enum TableSelection: String, CaseIterable {
     case books = "books"
@@ -104,7 +104,12 @@ struct Customer: Identifiable, Codable, CustomStringConvertible, FetchableRecord
 
     var description: String {
         return """
-            [ID: \(id ?? 0)]. - \(name). [Contact: \(email), \(phone)]
+            --------------------------------
+            Customer Id:   \(id ?? 0)
+            Name:          \(name)
+            Phone:         \(phone)
+            Email:         \(email)
+
             """
     }
 }
@@ -146,7 +151,12 @@ struct Book: Identifiable, Codable, FetchableRecord, PersistableRecord, MutableP
     }
     var description: String {
         return """
-            [ID: \(id ?? 0)]. - \(title) - \(author). (\(availableCopies) copies remaining.)
+            --------------------------------
+            Book Id:          \(id ?? 0)
+            Title:            \(title)
+            Author:           \(author)
+            Copies left:      \(availableCopies)/\(totalCopies)
+
             """
     }
 }
@@ -180,7 +190,12 @@ struct RentedBooks: Codable, FetchableRecord, PersistableRecord, CustomStringCon
 
     var description: String {
         return """
-            book #\(bookId), was rented by customer #\(customerId) on \(dateFormatter.string(from:bookedDate)). The book is due on \(dateFormatter.string(from: dueDate)).
+            --------------------------------
+            Book Id:         \(bookId)
+            Customer Id:     \(customerId)
+            Date rented:     \(dateFormatter.string(from:bookedDate))
+            Date due:        \(dateFormatter.string(from: dueDate))
+
             """
     }
 }
@@ -215,6 +230,7 @@ func viewData(tableChosen: String, dbQueue: DatabaseQueue, userInput: String?) {
     // This switch uses the tableCHosen to determine which table to display
     switch tableChosen {
     // BOOKS TABLE
+
     case TableSelection.books.rawValue:
         do {
             try dbQueue.read { db in
@@ -254,14 +270,14 @@ func viewData(tableChosen: String, dbQueue: DatabaseQueue, userInput: String?) {
                         .filter(Book.Columns.author.like("%\(bookAuthor)%"))
                         .fetchAll(db)
                     // Print the description for every book in the table.
-                    print("Here are all the books written by \(bookAuthor)")
+                    print("Matching results for: \(bookAuthor)")
                     for book in allBooksWithAuthor {
                         print(book)
                     }
                     if allBooksWithAuthor.isEmpty {
                         print("There are currently no books by this author.")
                     }
-                    waitForUser()
+                    
                 default:
                     print("Error viewing Book table.")
                 }
@@ -298,7 +314,7 @@ func viewData(tableChosen: String, dbQueue: DatabaseQueue, userInput: String?) {
                     if allCustomersWithName.isEmpty {
                         print("There are currently no customers with this name.")
                     }
-                    waitForUser()
+                    
                 }
 
             // PRINT ALL CUSTOMERS
@@ -307,7 +323,7 @@ func viewData(tableChosen: String, dbQueue: DatabaseQueue, userInput: String?) {
                 try dbQueue.read { db in
                     let allCustomers =
                         try Customer.order(Customer.Columns.name).fetchAll(db)
-
+                    print("Note: Email is an optional segment. Phone is required.")
                     // Print the description for every book in the table.
                     for customer in allCustomers {
                         print(customer)
@@ -325,16 +341,15 @@ func viewData(tableChosen: String, dbQueue: DatabaseQueue, userInput: String?) {
         print("All currently rented books - ordered by Oldest - > Newest:")
         do {
             try dbQueue.read { db in
-                let allRentedBooks = try RentedBooks.order(RentedBooks.Columns.bookedDate).fetchAll(
-                    db)
+                let allRentedBooks = try RentedBooks.order(RentedBooks.Columns.bookedDate).fetchAll(db)
 
                 // Print the description for every book in the table.
                 switch userInput {
 
                 // View all rented books
                 case MenuOption.viewRentedBooks.rawValue:
-                    for book in allRentedBooks {
-                        print(book.description)
+                    for rentedbook in allRentedBooks {
+                        print(rentedbook.description)
                     }
 
                 default:
@@ -836,7 +851,8 @@ func returnBook(dbQueue: DatabaseQueue) {
     print("\(header) RETURN BOOK")
 
     do {
-        viewData(tableChosen: tableSelection[2], dbQueue: dbQueue, userInput: nil)
+        // Display rentedBooks.
+        viewData(tableChosen: TableSelection.rentedBooks.rawValue, dbQueue: dbQueue, userInput: MenuOption.viewRentedBooks.rawValue)
 
         // Find out which record to remove from the user
         print("Enter the ID # of the book to be returned.")
@@ -888,8 +904,10 @@ func returnBook(dbQueue: DatabaseQueue) {
             print(
                 """
                 Book returned successfully.
+                ----------------------------
+                \(book.title)
+                \(book.availableCopies) copies now avaliable.
 
-                \(book.title) now has \(book.availableCopies) available copies.
                 """)
         }
     } catch {
@@ -929,23 +947,26 @@ struct SwiftPlayground {
             var inMainMenu = true
 
             while inMainMenu == true {
-
+                clear()
                 print(
                     """
                     \(header) MAIN MENU
                     Welcome to the Onslow College Library admin panel. Please select an operation using you numberpad.
-                    📖 \(MenuOption.rentBook.rawValue). Rent a book
-                    📖 \(MenuOption.returnBook.rawValue). Return a book
 
-                    👥 \(MenuOption.createCustomer.rawValue). Create a new customer record
-                    📖 \(MenuOption.createBook.rawValue). Create a new book record
+                    --------------------------------------------------
 
-                    👥 \(MenuOption.editCustomer.rawValue). Edit a customer
-                    📖 \(MenuOption.editBook.rawValue). Edit a book
-                    👥 \(MenuOption.viewCustomers.rawValue). View all customers
+                    📖 \(MenuOption.rentBook.rawValue).  Rent a book
+                    📖 \(MenuOption.returnBook.rawValue).  Return a book
 
-                    📖 \(MenuOption.viewBooks.rawValue). View all books
-                    📖 \(MenuOption.viewAvailableBooks.rawValue). View avaliable books
+                    👥 \(MenuOption.createCustomer.rawValue).  Create a new customer record
+                    📖 \(MenuOption.createBook.rawValue).  Create a new book record
+
+                    👥 \(MenuOption.editCustomer.rawValue).  Edit a customer
+                    📖 \(MenuOption.editBook.rawValue).  Edit a book
+                    👥 \(MenuOption.viewCustomers.rawValue).  View all customers
+
+                    📖 \(MenuOption.viewBooks.rawValue).  View all books
+                    📖 \(MenuOption.viewAvailableBooks.rawValue).  View avaliable books
                     📖 \(MenuOption.viewRentedBooks.rawValue). View all currently rented out books
 
                     👥 \(MenuOption.searchCustomerByName.rawValue). Search for customer by name
@@ -955,6 +976,8 @@ struct SwiftPlayground {
                     👥 \(MenuOption.deleteCustomer.rawValue). Delete a customer record
 
                     ⚠️  \(MenuOption.shutdown.rawValue). Shut down system  ⚠️
+
+                    Select an operation:
                     """)
 
                 // checks user input with MenuOption
@@ -966,7 +989,7 @@ struct SwiftPlayground {
                     clear()
                     print(
                         """
-                        -----
+                        -------------
                         Please select an operation by typing a valid integer.
                         """)
                     continue
@@ -1034,10 +1057,10 @@ struct SwiftPlayground {
                     clear()
                     print(
                         """
-                        Thank you for using the OC Library admin panel.
+                        Thank you for using the OC Library admin panel. We hope to see you soon.
 
-                        System shutting down...
-                        See you later!
+                        Admin Panel was shut down sucessfully.
+                        
                         """)
                     inMainMenu = false
                 default:
@@ -1046,7 +1069,7 @@ struct SwiftPlayground {
                     print(
                         """
                         -----
-                        Please select an operation by typing a valid integer.
+                        Error with operation. Please enter a valid option.
                         """)
                 }
 
