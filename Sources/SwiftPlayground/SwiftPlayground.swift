@@ -30,10 +30,12 @@ let date = dateFormatter.string(from: Date())
 
 // This header goes at the top of each menu page.
 let header: String = """
-    ----------------------------------------------
+    ╞═════════════════════════════════════════════════════════╡
     \(date) - ONSLOW COLLEGE LIBRARY - ADMIN PANEL -
     """
-
+let toplineseperator: String = "┍━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓"
+let lineseperator: String = "┝━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┫"
+let baselineseperator: String = "┕━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛"
 /// The buttons for the menus, used to make selections. Edit these to change the menu and all selections.
 /// This enum let us create a more maintainable main menu for futureproofing-Edit a number and it doesnt break the code
 enum MenuOption: String, CaseIterable {
@@ -105,12 +107,11 @@ struct Customer: Identifiable, Codable, CustomStringConvertible, FetchableRecord
 
     var description: String {
         return """
-            --------------------------------
-            Customer Id:   \(id ?? 0)
-            Name:          \(name)
-            Phone:         \(phone)
-            Email:         \(email)
-
+            \(lineseperator)
+            ┆Customer Id:   \(id ?? 0)
+            ┆Name:          \(name)
+            ┆Phone:         \(phone)
+            ┆Email:         \(email)
             """
     }
 }
@@ -152,12 +153,11 @@ struct Book: Identifiable, Codable, FetchableRecord, PersistableRecord, MutableP
     }
     var description: String {
         return """
-            --------------------------------
-            Book Id:          \(id ?? 0)
-            Title:            \(title)
-            Author:           \(author)
-            Copies left:      \(availableCopies)/\(totalCopies)
-
+            \(lineseperator)
+            ┆Book Id:          \(id ?? 0)
+            ┆Title:            \(title)
+            ┆Author:           \(author)
+            ┆Copies left:      \(availableCopies)/\(totalCopies)
             """
     }
 }
@@ -191,12 +191,11 @@ struct RentedBooks: Codable, FetchableRecord, PersistableRecord, CustomStringCon
 
     var description: String {
         return """
-            --------------------------------
-            Book Id:         \(bookId)
-            Customer Id:     \(customerId)
-            Date rented:     \(dateFormatter.string(from:bookedDate))
-            Date due:        \(dateFormatter.string(from: dueDate))
-
+            \(lineseperator)
+            ┆Book Id:         \(bookId)
+            ┆Customer Id:     \(customerId)
+            ┆Date rented:     \(dateFormatter.string(from:bookedDate))
+            ┆Date due:        \(dateFormatter.string(from: dueDate))
             """
     }
 }
@@ -227,7 +226,7 @@ func clear() {
 ///
 /// viewData() is used to display tables from the dbPath
 func viewData(tableChosen: String, dbQueue: DatabaseQueue, userInput: String?) {
-
+print(toplineseperator)
     // This switch uses the tableCHosen to determine which table to display
     switch tableChosen {
     // BOOKS TABLE
@@ -242,12 +241,14 @@ func viewData(tableChosen: String, dbQueue: DatabaseQueue, userInput: String?) {
 
                 // View all books
                 case MenuOption.viewBooks.rawValue:
+                print("┆ All books")
                     for book in allBooks {
                         print(book.description)
                     }
 
                 // View available books
                 case MenuOption.viewAvailableBooks.rawValue:
+                print("┆ Available books")
                     for book in allBooks {
                         if book.availableCopies > 0 {
                             print(book.description)
@@ -271,7 +272,8 @@ func viewData(tableChosen: String, dbQueue: DatabaseQueue, userInput: String?) {
                         .filter(Book.Columns.author.like("%\(bookAuthor)%"))
                         .fetchAll(db)
                     // Print the description for every book in the table.
-                    print("Matching results for: \(bookAuthor)")
+                    
+                    print("┆ Matching results for: \(bookAuthor)")
                     for book in allBooksWithAuthor {
                         print(book)
                     }
@@ -284,6 +286,7 @@ func viewData(tableChosen: String, dbQueue: DatabaseQueue, userInput: String?) {
                 }
 
             }
+            print("\(baselineseperator)")
         } catch {
             print(error)
         }
@@ -307,7 +310,7 @@ func viewData(tableChosen: String, dbQueue: DatabaseQueue, userInput: String?) {
                         .filter(Customer.Columns.name.like("%\(customerName)%"))
                         .fetchAll(db)
                     // Print the description for every book in the table.
-                    print("Matching results for: \(customerName)")
+                    print("┆ Matching results for: \(customerName)")
                     for customer in allCustomersWithName {
                         print(customer)
                     }
@@ -324,22 +327,24 @@ func viewData(tableChosen: String, dbQueue: DatabaseQueue, userInput: String?) {
                 try dbQueue.read { db in
                     let allCustomers =
                         try Customer.order(Customer.Columns.name).fetchAll(db)
-                    print("Note: Email is an optional segment. Phone is required.")
+                        print("┆ All Customers")
+                    print("┆ Note: Email is an optional segment. Phone is required.")
                     // Print the description for every book in the table.
                     for customer in allCustomers {
                         print(customer)
                     }
                 }
             default:
-                print("error displaying customers.")
+                print("┆ error displaying customers.")
             }
+            print(baselineseperator)
         } catch {
             print(error)
         }
 
     // RENTEDBOOK TABLE
     case TableSelection.rentedBooks.rawValue:
-        print("All currently rented books - ordered by Oldest - > Newest:")
+        print("┆ All currently rented books\n┆ ordered by Oldest - > Newest:")
         do {
             try dbQueue.read { db in
                 let allRentedBooks = try RentedBooks.order(RentedBooks.Columns.bookedDate).fetchAll(db)
@@ -354,11 +359,12 @@ func viewData(tableChosen: String, dbQueue: DatabaseQueue, userInput: String?) {
                     }
 
                 default:
-                    print("Unsucsesful viewing of table RentedBooks.")
+                    print("┆ Unsucsesful viewing of table RentedBooks.")
 
                 }
 
             }
+            print(baselineseperator)
         } catch { print(error) }
 
     // View rented books
@@ -618,7 +624,7 @@ func rentBook(dbQueue: DatabaseQueue) {
     print("Here are all the books currently available in the library.")
     // Displays all the books.
     viewData(
-        tableChosen: TableSelection.books.rawValue, dbQueue: dbQueue, userInput: MenuOption.viewBooks.rawValue)
+        tableChosen: TableSelection.books.rawValue, dbQueue: dbQueue, userInput: MenuOption.viewAvailableBooks.rawValue)
 
     print("Please type the ID number of the book you wish to rent.")
     guard let selectedBookId = readLine(),
@@ -954,7 +960,7 @@ struct SwiftPlayground {
                     \(header) MAIN MENU
                     Welcome to the Onslow College Library admin panel. Please select an operation using you numberpad.
 
-                    --------------------------------------------------
+                    ═════════════════════════════════════════════════════════
 
                     📖 \(MenuOption.rentBook.rawValue).  Rent a book
                     📖 \(MenuOption.returnBook.rawValue).  Return a book
