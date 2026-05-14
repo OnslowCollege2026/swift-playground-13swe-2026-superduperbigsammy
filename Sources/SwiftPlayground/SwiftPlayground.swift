@@ -30,7 +30,7 @@ let date = dateFormatter.string(from: Date())
 
 // This header goes at the top of each menu page.
 let header: String = """
-    ╞═════════════════════════════════════════════════════════╡
+    ═════════════════════════════════════════════════════════
     \(date) - ONSLOW COLLEGE LIBRARY - ADMIN PANEL -
     """
 let toplineseperator: String = "┍━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓"
@@ -959,8 +959,6 @@ struct SwiftPlayground {
                     """
                     \(header) MAIN MENU
                     Welcome to the Onslow College Library admin panel. Please select an operation using you numberpad.
-
-                    ═════════════════════════════════════════════════════════
 
                     📖 \(MenuOption.rentBook.rawValue).  Rent a book
                     📖 \(MenuOption.returnBook.rawValue).  Return a book
