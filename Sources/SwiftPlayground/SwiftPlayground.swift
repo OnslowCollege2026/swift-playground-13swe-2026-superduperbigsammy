@@ -258,7 +258,7 @@ print(toplineseperator)
                 // SEARCH AUTHOR
                 case MenuOption.searchBookByAuthor.rawValue:
 
-                    print("Please enter the author's name:")
+                    print("┆ Please enter the author's name:")
                     guard let bookAuthor = readLine()
                     else {
                         print("Invalid author given.")
@@ -278,7 +278,7 @@ print(toplineseperator)
                         print(book)
                     }
                     if allBooksWithAuthor.isEmpty {
-                        print("There are currently no books by this author.")
+                        print("┆    There are currently no books by this author.")
                     }
                     
                 default:
@@ -297,7 +297,7 @@ print(toplineseperator)
             switch userInput {
             // SEARCH CUSTOMERS
             case MenuOption.searchCustomerByName.rawValue:
-                print("Please enter the customer name:")
+                print("┆ Please enter the customer name:")
                 guard let customerName = readLine()
                 else {
                     print("Invalid name given.")
@@ -316,7 +316,7 @@ print(toplineseperator)
                     }
 
                     if allCustomersWithName.isEmpty {
-                        print("There are currently no customers with this name.")
+                        print("┆    There are currently no customers with this name.")
                     }
                     
                 }
